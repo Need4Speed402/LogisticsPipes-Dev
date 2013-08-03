@@ -129,10 +129,12 @@ public class LogisticsEventListener implements IPlayerTracker {
 		if(MainProxy.isServer(player.worldObj)) {
 			SimpleServiceLocator.securityStationManager.sendClientAuthorizationList(player);
 		}
+		/*
 		if(VersionChecker.hasNewVersion) {
 			player.sendChatToPlayer("Your LogisticsPipes version is outdated. The newest version is #" + VersionChecker.newVersion + ".");
 			player.sendChatToPlayer("Use \"/logisticspipes changelog\" to see a changelog.");
 		}
+		*/
 	}
 
 	@Override

@@ -16,9 +16,9 @@ import com.google.gson.internal.LinkedTreeMap;
 
 public class VersionChecker extends Thread {
 
-	public static boolean hasNewVersion = false;
-	public static String newVersion = "";
-	public static List<String> changeLog = new ArrayList<String>(0);
+	//public static boolean hasNewVersion = false;
+	//public static String newVersion = "";
+	//public static List<String> changeLog = new ArrayList<String>(0);
 
 	public VersionChecker() {
 		this.setDaemon(true);
@@ -36,6 +36,7 @@ public class VersionChecker extends Thread {
 			Scanner s = new Scanner(inputStream).useDelimiter("\\A");
 			String string = s.next();
 			s.close();
+			/*
 			Gson gson = new Gson();
 			LinkedTreeMap part = gson.fromJson(string, LinkedTreeMap.class);
 			Boolean hasNew = (Boolean) part.get("new");
@@ -57,6 +58,7 @@ public class VersionChecker extends Thread {
 				}
 				VersionChecker.changeLog = changeLogList;
 			}
+			*/
 		} catch(MalformedURLException e) {
 			e.printStackTrace();
 		} catch(IOException e) {

@@ -50,10 +50,10 @@ public class LogisticsPipesCommand extends CommandBase {
 		if(arguments[0].equalsIgnoreCase("version")) {
         	commandVersion(sender, arguments);
         	return;
-        } else if(arguments[0].equalsIgnoreCase("changelog")) {
+        } else/* if(arguments[0].equalsIgnoreCase("changelog")) {
         	commandChangelog(sender, arguments);
         	return;
-        } else if(arguments[0].equalsIgnoreCase("NBTDEBUG")) {
+        } else*/ if(arguments[0].equalsIgnoreCase("NBTDEBUG")) {
         	if(!(sender instanceof Player)) {
         		throw new WrongUsageException("You can't use this command.");
         	}
@@ -83,7 +83,7 @@ public class LogisticsPipesCommand extends CommandBase {
         	sender.sendChatToPlayer("Format: '"+ this.getCommandName() +" <command> <arguments>'");
         	sender.sendChatToPlayer("Available commands:");
         	sender.sendChatToPlayer("- version : Version information.");
-        	if(VersionChecker.hasNewVersion) sender.sendChatToPlayer("- changelog : Shows the changelog for the new version.");
+        	//if(VersionChecker.hasNewVersion) sender.sendChatToPlayer("- changelog : Shows the changelog for the new version.");
         	sender.sendChatToPlayer("- routingthread : Display Routing thread status information.");
         	sender.sendChatToPlayer("- transfernames : Sends all item names form the client to the server to update the Language Database.");//TODO
         	return;
@@ -141,12 +141,14 @@ public class LogisticsPipesCommand extends CommandBase {
 
 	private void commandVersion(ICommandSender sender, String[] arguments) {
     	sender.sendChatToPlayer(String.format("LogisticsPipes %s for Minecraft %s.", LogisticsPipes.class.getAnnotation(Mod.class).version(), LogisticsPipes.MCVersion));
+    	/*
     	if(VersionChecker.hasNewVersion) {
     		sender.sendChatToPlayer("Your LogisticsPipes version is outdated. The newest version is #" + VersionChecker.newVersion + ".");
     		sender.sendChatToPlayer("Use \"/logisticspipes changelog\" to see a changelog.");
         }
+        */
 	}
-
+/*
 	private void commandChangelog(ICommandSender sender, String[] arguments) {
     	if(VersionChecker.hasNewVersion) {
     		sender.sendChatToPlayer("The newest version is #" + VersionChecker.newVersion + ".");
@@ -156,4 +158,5 @@ public class LogisticsPipesCommand extends CommandBase {
     		}
         }
 	}
+*/
 }
