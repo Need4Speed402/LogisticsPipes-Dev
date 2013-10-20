@@ -59,7 +59,7 @@ public class ClientProxy implements IProxy {
 		GameRegistry.registerTileEntity(LogisticsTileGenericPipe.class, LogisticsPipes.logisticsTileGenericPipeMapping);
 		LogisticsRenderPipe lrp = new LogisticsRenderPipe();
 		ClientRegistry.bindTileEntitySpecialRenderer(LogisticsTileGenericPipe.class, lrp);
-		SimpleServiceLocator.buildCraftProxy.resetItemRotation(lrp);
+		//SimpleServiceLocator.buildCraftProxy.resetItemRotation(lrp);
 		Object brp = TileEntityRenderer.instance.specialRendererMap.get(TileGenericPipe.class);
 		if(brp instanceof RenderPipe) {
 			SimpleServiceLocator.buildCraftProxy.resetItemRotation((RenderPipe) brp);

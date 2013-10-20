@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import logisticspipes.pipes.PipeBlockRequestTable;
 import logisticspipes.pipes.PipeItemsCraftingLogistics;
+import logisticspipes.pipes.basic.LogisticsTileGenericPipe;
 import logisticspipes.transport.PipeFluidTransportLogistics;
 import logisticspipes.utils.ItemIdentifierStack;
 import net.minecraft.block.Block;
@@ -15,7 +15,11 @@ import net.minecraft.client.model.ModelSign;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.entity.RenderItem;
+import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
@@ -41,12 +45,15 @@ import buildcraft.core.render.RenderEntityBlock;
 import buildcraft.core.render.RenderEntityBlock.BlockInterface;
 import buildcraft.core.utils.Utils;
 import buildcraft.transport.Pipe;
-import buildcraft.transport.TileGenericPipe;
-import buildcraft.transport.render.RenderPipe;
+import buildcraft.transport.PipeTransportItems;
+import buildcraft.transport.TravelingItem;
 
-public class LogisticsRenderPipe extends RenderPipe {
+public class LogisticsRenderPipe extends TileEntitySpecialRenderer {
 
 	final static private int LIQUID_STAGES = 40;
+	final static private int MAX_ITEMS_TO_RENDER = 10;
+	private final EntityItem dummyEntityItem = new EntityItem(null);
+	private final RenderItem customRenderItem;
 
 	private final int[] angleY = { 0, 0, 270, 90, 0, 180 };
 	private final int[] angleZ = { 90, 270, 0, 0, 0, 0 };
@@ -58,42 +65,60 @@ public class LogisticsRenderPipe extends RenderPipe {
 	private RenderBlocks renderBlocks = new RenderBlocks();
 	
 	private class DisplayFluidList {
-
 		public int[] sideHorizontal = new int[LIQUID_STAGES];
 		public int[] sideVertical = new int[LIQUID_STAGES];
 		public int[] centerHorizontal = new int[LIQUID_STAGES];
 		public int[] centerVertical = new int[LIQUID_STAGES];
 	}
-	
+
+	public LogisticsRenderPipe() {
+		customRenderItem = new RenderItem() {
+			@Override
+			public boolean shouldBob() {
+				return false;
+			}
+
+			@Override
+			public boolean shouldSpreadItems() {
+				return false;
+			}
+		};
+		customRenderItem.setRenderManager(RenderManager.instance);
+		dummyEntityItem.hoverStart = 0;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void renderTileEntityAt(TileEntity tileentity, double x, double y, double z, float f) {
-		super.renderTileEntityAt(tileentity, x, y, z, f);
+		//super.renderTileEntityAt(tileentity, x, y, z, f);
 		if (BuildCraftCore.render == RenderMode.NoDynamic) return;
-		TileGenericPipe pipe = ((TileGenericPipe) tileentity);
+		LogisticsTileGenericPipe pipe = ((LogisticsTileGenericPipe) tileentity);
 		if (pipe.pipe == null) return;
+		renderSolids(pipe.pipe, x, y, z);
 		if (pipe.pipe.transport instanceof PipeFluidTransportLogistics) {
 			renderFluids((Pipe<PipeFluidTransportLogistics>)pipe.pipe, x, y, z);
 		}
 		if(pipe.pipe instanceof PipeItemsCraftingLogistics) {
 			renderCraftingPipe((PipeItemsCraftingLogistics) pipe.pipe, x, y, z);
 		}
+		/*
 		if(pipe.pipe instanceof PipeBlockRequestTable) {
 			try {
 				renderBlock((PipeBlockRequestTable) pipe.pipe, x, y, z);
 			} catch(Exception e) {
 				e.printStackTrace();
-	}
+			}
 		}
+		*/
 	}
-	
+	/*
 	private void renderBlock(PipeBlockRequestTable blockPipe, double x, double y, double z) {
 		GL11.glPushMatrix();
 		GL11.glTranslatef((float) x + 0.5F, (float) y + 0.5F, (float) z + 0.5F);
 		
 		GL11.glPopMatrix();
 	}
-	
+	*/
 	private boolean needDistance(List<ForgeDirection> list) {
 		List<ForgeDirection> copy = new ArrayList<ForgeDirection>(list);
 		copy.remove(ForgeDirection.UP);
@@ -570,4 +595,35 @@ public class LogisticsRenderPipe extends RenderPipe {
 		return d;
 	}
 
+	private void renderSolids(Pipe<PipeTransportItems> pipe, double x, double y, double z) {
+		GL11.glPushMatrix();
+		GL11.glDisable(GL11.GL_LIGHTING);
+
+		float light = pipe.container.worldObj.getLightBrightness(pipe.container.xCoord, pipe.container.yCoord, pipe.container.zCoord);
+
+		int count = 0;
+		for (TravelingItem item : pipe.transport.items) {
+			if (count++ >= MAX_ITEMS_TO_RENDER) break;
+			doRenderItem(item, x + item.xCoord - pipe.container.xCoord, y + item.yCoord - pipe.container.yCoord, z + item.zCoord - pipe.container.zCoord, light);
+		}
+
+		GL11.glEnable(GL11.GL_LIGHTING);
+		GL11.glPopMatrix();
+	}
+
+	public void doRenderItem(TravelingItem travellingItem, double x, double y, double z, float light) {
+
+		if (travellingItem == null || travellingItem.getItemStack() == null)
+			return;
+
+		float renderScale = 0.7f;
+		ItemStack itemstack = travellingItem.getItemStack();
+		GL11.glPushMatrix();
+		GL11.glTranslatef((float) x, (float) y, (float) z);
+		GL11.glTranslatef(0, 0.25F, 0);
+		GL11.glScalef(renderScale, renderScale, renderScale);
+		dummyEntityItem.setEntityItemStack(itemstack);
+		customRenderItem.doRenderItem(dummyEntityItem, 0, 0, 0, 0, 0);
+		GL11.glPopMatrix();
+	}
 }
