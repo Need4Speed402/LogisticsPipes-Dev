@@ -22,7 +22,6 @@ import net.minecraft.world.World;
 
 import org.lwjgl.input.Keyboard;
 
-import buildcraft.BuildCraftCore;
 import buildcraft.api.core.IIconProvider;
 import buildcraft.core.utils.Localization;
 import buildcraft.transport.Pipe;
@@ -78,7 +77,7 @@ public class ItemLogisticsPipe extends LogisticsItem {
 		if (world.canPlaceEntityOnSide(blockID, i, j, k, false, side, entityplayer, itemstack)) {
 			Pipe<?> pipe = LogisticsBlockGenericPipe.createPipe(itemID);
 			if (pipe == null) {
-				BuildCraftCore.bcLog.log(Level.WARNING, "Pipe failed to create during placement at {0},{1},{2}", new Object[]{i, j, k});
+				LogisticsPipes.log.log(Level.WARNING, "Pipe failed to create during placement at {0},{1},{2}", new Object[]{i, j, k});
 				return true;
 			}
 			if (LogisticsBlockGenericPipe.placePipe(pipe, world, i, j, k, blockID, 0)) {

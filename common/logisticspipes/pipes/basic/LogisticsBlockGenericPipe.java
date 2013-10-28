@@ -32,12 +32,12 @@ import net.minecraft.util.Vec3;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
-import buildcraft.BuildCraftCore;
 import buildcraft.BuildCraftTransport;
 import buildcraft.api.tools.IToolWrench;
 import buildcraft.api.transport.IPipe;
 import buildcraft.api.transport.ISolidSideTile;
 import buildcraft.core.BlockIndex;
+import buildcraft.core.CoreConstants;
 import buildcraft.core.proxy.CoreProxy;
 import buildcraft.core.utils.Utils;
 import buildcraft.transport.Gate;
@@ -45,7 +45,7 @@ import buildcraft.transport.IPipeRenderState;
 import buildcraft.transport.ItemPipe;
 import buildcraft.transport.Pipe;
 import buildcraft.transport.PipeIconProvider;
-import buildcraft.transport.render.PipeWorldRenderer;
+import buildcraft.transport.TransportConstants;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -105,40 +105,40 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			}
 			return;
 		}
-		setBlockBounds(Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMaxPos, Utils.pipeMaxPos, Utils.pipeMaxPos);
+		setBlockBounds(CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS);
 		super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		
 		if (tileG.isPipeConnected(ForgeDirection.WEST)) {
-			setBlockBounds(0.0F, Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMaxPos, Utils.pipeMaxPos, Utils.pipeMaxPos);
+			setBlockBounds(0.0F, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
 		if (tileG.isPipeConnected(ForgeDirection.EAST)) {
-			setBlockBounds(Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMinPos, 1.0F, Utils.pipeMaxPos, Utils.pipeMaxPos);
+			setBlockBounds(CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, 1.0F, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
 		if (tileG.isPipeConnected(ForgeDirection.DOWN)) {
-			setBlockBounds(Utils.pipeMinPos, 0.0F, Utils.pipeMinPos, Utils.pipeMaxPos, Utils.pipeMaxPos, Utils.pipeMaxPos);
+			setBlockBounds(CoreConstants.PIPE_MIN_POS, 0.0F, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
 		if (tileG.isPipeConnected(ForgeDirection.UP)) {
-			setBlockBounds(Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMaxPos, 1.0F, Utils.pipeMaxPos);
+			setBlockBounds(CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MAX_POS, 1.0F, CoreConstants.PIPE_MAX_POS);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
 		if (tileG.isPipeConnected(ForgeDirection.NORTH)) {
-			setBlockBounds(Utils.pipeMinPos, Utils.pipeMinPos, 0.0F, Utils.pipeMaxPos, Utils.pipeMaxPos, Utils.pipeMaxPos);
+			setBlockBounds(CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, 0.0F, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
 		if (tileG.isPipeConnected(ForgeDirection.SOUTH)) {
-			setBlockBounds(Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMinPos, Utils.pipeMaxPos, Utils.pipeMaxPos, 1.0F);
+			setBlockBounds(CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MIN_POS, CoreConstants.PIPE_MAX_POS, CoreConstants.PIPE_MAX_POS, 1.0F);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
 
-		float facadeThickness = PipeWorldRenderer.facadeThickness;
+		float facadeThickness = TransportConstants.FACADE_THICKNESS;
 
 		if (tileG.hasFacade(ForgeDirection.EAST)) {
 			setBlockBounds(1 - facadeThickness, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
@@ -180,7 +180,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 		if(tileG instanceof LogisticsTileGenericPipe && tileG.pipe instanceof PipeBlockRequestTable) {
 			return AxisAlignedBB.getBoundingBox((double) i + 0, (double) j + 0, (double) k + 0, (double) i + 1, (double) j + 1, (double) k + 1);
 		}
-		float xMin = Utils.pipeMinPos, xMax = Utils.pipeMaxPos, yMin = Utils.pipeMinPos, yMax = Utils.pipeMaxPos, zMin = Utils.pipeMinPos, zMax = Utils.pipeMaxPos;
+		float xMin = CoreConstants.PIPE_MIN_POS, xMax = CoreConstants.PIPE_MAX_POS, yMin = CoreConstants.PIPE_MIN_POS, yMax = CoreConstants.PIPE_MAX_POS, zMin = CoreConstants.PIPE_MIN_POS, zMax = CoreConstants.PIPE_MAX_POS;
 
 		if (tileG.isPipeConnected(ForgeDirection.WEST) || tileG.hasFacade(ForgeDirection.WEST)) {
 			xMin = 0.0F;
@@ -433,7 +433,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 	}
 
 	private RaytraceResult doRayTrace(World world, int x, int y, int z, Vec3 origin, Vec3 direction) {
-		float xMin = Utils.pipeMinPos, xMax = Utils.pipeMaxPos, yMin = Utils.pipeMinPos, yMax = Utils.pipeMaxPos, zMin = Utils.pipeMinPos, zMax = Utils.pipeMaxPos;
+		float xMin = CoreConstants.PIPE_MIN_POS, xMax = CoreConstants.PIPE_MAX_POS, yMin = CoreConstants.PIPE_MIN_POS, yMax = CoreConstants.PIPE_MAX_POS, zMin = CoreConstants.PIPE_MIN_POS, zMax = CoreConstants.PIPE_MAX_POS;
 
 		TileEntity pipeTileEntity = world.getBlockTileEntity(x, y, z);
 
@@ -474,8 +474,8 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			setBlockBounds(xMin, yMin, zMin, xMax, yMax, zMax);
 
 			hits[0] = super.collisionRayTrace(world, x, y, z, origin, direction);
-			xMin = Utils.pipeMinPos;
-			xMax = Utils.pipeMaxPos;
+			xMin = CoreConstants.PIPE_MIN_POS;
+			xMax = CoreConstants.PIPE_MAX_POS;
 			needAxisCheck = false;
 			needCenterCheck = false; // center already checked through this axis
 		}
@@ -496,8 +496,8 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			setBlockBounds(xMin, yMin, zMin, xMax, yMax, zMax);
 
 			hits[1] = super.collisionRayTrace(world, x, y, z, origin, direction);
-			yMin = Utils.pipeMinPos;
-			yMax = Utils.pipeMaxPos;
+			yMin = CoreConstants.PIPE_MIN_POS;
+			yMax = CoreConstants.PIPE_MAX_POS;
 			needAxisCheck = false;
 			needCenterCheck = false; // center already checked through this axis
 		}
@@ -518,8 +518,8 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			setBlockBounds(xMin, yMin, zMin, xMax, yMax, zMax);
 
 			hits[2] = super.collisionRayTrace(world, x, y, z, origin, direction);
-			zMin = Utils.pipeMinPos;
-			zMax = Utils.pipeMaxPos;
+			zMin = CoreConstants.PIPE_MIN_POS;
+			zMax = CoreConstants.PIPE_MAX_POS;
 			needAxisCheck = false;
 			needCenterCheck = false; // center already checked through this axis
 		}
@@ -582,28 +582,28 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 	}
 
 	private void setBlockBoundsToGate(ForgeDirection dir) {
-		float min = Utils.pipeMinPos + 0.05F;
-		float max = Utils.pipeMaxPos - 0.05F;
+		float min = CoreConstants.PIPE_MIN_POS + 0.05F;
+		float max = CoreConstants.PIPE_MAX_POS - 0.05F;
 
 		switch (dir) {
 			case DOWN:
-				setBlockBounds(min, Utils.pipeMinPos - 0.10F, min, max, Utils.pipeMinPos, max);
+				setBlockBounds(min, CoreConstants.PIPE_MIN_POS - 0.10F, min, max, CoreConstants.PIPE_MIN_POS, max);
 				break;
 			case UP:
-				setBlockBounds(min, Utils.pipeMaxPos, min, max, Utils.pipeMaxPos + 0.10F, max);
+				setBlockBounds(min, CoreConstants.PIPE_MAX_POS, min, max, CoreConstants.PIPE_MAX_POS + 0.10F, max);
 				break;
 			case NORTH:
-				setBlockBounds(min, min, Utils.pipeMinPos - 0.10F, max, max, Utils.pipeMinPos);
+				setBlockBounds(min, min, CoreConstants.PIPE_MIN_POS - 0.10F, max, max, CoreConstants.PIPE_MIN_POS);
 				break;
 			case SOUTH:
-				setBlockBounds(min, min, Utils.pipeMaxPos, max, max, Utils.pipeMaxPos + 0.10F);
+				setBlockBounds(min, min, CoreConstants.PIPE_MAX_POS, max, max, CoreConstants.PIPE_MAX_POS + 0.10F);
 				break;
 			case WEST:
-				setBlockBounds(Utils.pipeMinPos - 0.10F, min, min, Utils.pipeMinPos, max, max);
+				setBlockBounds(CoreConstants.PIPE_MIN_POS - 0.10F, min, min, CoreConstants.PIPE_MIN_POS, max, max);
 				break;
 			default:
 			case EAST:
-				setBlockBounds(Utils.pipeMaxPos, min, min, Utils.pipeMaxPos + 0.10F, max, max);
+				setBlockBounds(CoreConstants.PIPE_MAX_POS, min, min, CoreConstants.PIPE_MAX_POS + 0.10F, max, max);
 				break;
 		}
 	}
@@ -967,13 +967,11 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			if (pipe != null)
 				return pipe.getConstructor(int.class).newInstance(key);
 			else {
-				BuildCraftCore.bcLog.warning("Detected pipe with unknown key (" + key + "). Did you remove a buildcraft addon?");
+				LogisticsPipes.log.warning("Detected pipe with unknown key (" + key + "). Did you remove a buildcraft addon?");
 			}
-
 		} catch (Throwable t) {
-			BuildCraftCore.bcLog.warning("Failed to create pipe with (" + key + "). No valid constructor found. Possibly a item ID conflit.");
+			LogisticsPipes.log.warning("Failed to create pipe with (" + key + "). No valid constructor found. Possibly a item ID conflit.");
 		}
-
 		return null;
 	}
 

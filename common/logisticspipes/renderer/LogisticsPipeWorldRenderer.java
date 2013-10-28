@@ -11,10 +11,11 @@ import net.minecraft.util.Icon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.ForgeDirection;
 import buildcraft.api.core.IIconProvider;
-import buildcraft.core.utils.Utils;
+import buildcraft.core.CoreConstants;
 import buildcraft.transport.IPipeRenderState;
 import buildcraft.transport.PipeRenderState;
 import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
+
 
 public class LogisticsPipeWorldRenderer implements ISimpleBlockRenderingHandler {
 
@@ -72,8 +73,8 @@ public class LogisticsPipeWorldRenderer implements ISimpleBlockRenderingHandler 
 			return;
 		}
 
-		float minSize = Utils.pipeMinPos;
-		float maxSize = Utils.pipeMaxPos;
+		float minSize = CoreConstants.PIPE_MIN_POS;
+		float maxSize = CoreConstants.PIPE_MAX_POS;
 
 		PipeRenderState state = renderState.getRenderState();
 		IIconProvider icons = renderState.getPipeIcons();
