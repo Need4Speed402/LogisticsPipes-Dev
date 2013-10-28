@@ -3,6 +3,7 @@ package logisticspipes.textures.provider;
 import java.util.ArrayList;
 
 import net.minecraft.client.renderer.texture.IconRegister;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.util.Icon;
 import buildcraft.api.core.IIconProvider;
 import cpw.mods.fml.relauncher.Side;
@@ -17,6 +18,11 @@ public class LPPipeIconProvider implements IIconProvider {
 	}
 	
 	public void setIcon(int index, Icon icon) {
+		if(icon instanceof TextureAtlasSprite) {
+			if(((TextureAtlasSprite)icon).getIconName().contains("block")) {
+				System.out.println();
+			}
+		}
 		while(icons.size() < index + 1) {
 			icons.add(null);
 		}

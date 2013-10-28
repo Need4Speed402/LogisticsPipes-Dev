@@ -12,6 +12,7 @@ import logisticspipes.LogisticsPipes;
 import logisticspipes.asm.ModDependentField;
 import logisticspipes.asm.ModDependentInterface;
 import logisticspipes.asm.ModDependentMethod;
+import logisticspipes.proxy.MainProxy;
 import logisticspipes.proxy.SimpleServiceLocator;
 import logisticspipes.proxy.cc.CCHelper;
 import logisticspipes.proxy.cc.interfaces.CCCommand;
@@ -19,6 +20,7 @@ import logisticspipes.proxy.cc.interfaces.CCQueued;
 import logisticspipes.proxy.cc.interfaces.CCType;
 import logisticspipes.security.PermissionException;
 import logisticspipes.ticks.QueuedTasks;
+import logisticspipes.ticks.WorldTickHandler;
 import logisticspipes.utils.AdjacentTile;
 import logisticspipes.utils.OrientationsUtil;
 import logisticspipes.utils.WorldUtil;
@@ -444,6 +446,19 @@ public class LogisticsTileGenericPipe extends TileGenericPipe implements IPeriph
 	}
 
 	@Override
+	public void updateEntity() {
+		if(MainProxy.isServer(getWorldObj())) {
+			if(getWorldObj().getBlockId(xCoord, yCoord, zCoord) != LogisticsPipes.LogisticsBlockGenericPipe.blockID) {
+				WorldTickHandler.serverPipesToReplace.add(this);
+			} else {
+				super.updateEntity();			
+			}
+		} else {
+			super.updateEntity();			
+		}
+	}
+
+	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
 		super.writeToNBT(nbttagcompound);
 		for(int i=0;i<turtleConnect.length;i++) {
@@ -457,6 +472,8 @@ public class LogisticsTileGenericPipe extends TileGenericPipe implements IPeriph
 		for(int i=0;i<turtleConnect.length;i++) {
 			turtleConnect[i] = nbttagcompound.getBoolean("turtleConnect_" + i);
 		}
+		int pipeId = nbttagcompound.getInteger("pipeId");
+		pipe = LogisticsBlockGenericPipe.createPipe(pipeId);
 	}
 
 	@Override

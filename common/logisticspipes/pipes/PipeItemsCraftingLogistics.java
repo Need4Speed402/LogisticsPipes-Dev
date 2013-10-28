@@ -727,7 +727,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 		int closestIdFound = prev ? 0 : Integer.MAX_VALUE;
 		for (final PipeItemsSatelliteLogistics satellite : PipeItemsSatelliteLogistics.AllSatellites) {
 			CoreRoutedPipe satPipe = satellite;
-			if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null || satPipe.isFluidPipe()) continue;
+			if(satPipe == null || satPipe.getRouter() == null || satPipe.isFluidPipe()) continue;
 			IRouter satRouter = satPipe.getRouter();
 			List<ExitRoute> routes = getRouter().getDistanceTo(satRouter);
 			if(routes != null && !routes.isEmpty()) {
@@ -768,7 +768,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 		int closestIdFound = prev ? 0 : Integer.MAX_VALUE;
 		for (final PipeFluidSatellite satellite : PipeFluidSatellite.AllSatellites) {
 			CoreRoutedPipe satPipe = satellite;
-			if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null || !satPipe.isFluidPipe()) continue;
+			if(satPipe == null || satPipe.getRouter() == null || !satPipe.isFluidPipe()) continue;
 			IRouter satRouter = satPipe.getRouter();
 			List<ExitRoute> routes = getRouter().getDistanceTo(satRouter);
 			if(routes != null && !routes.isEmpty()) {
@@ -844,7 +844,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 			for (final PipeItemsSatelliteLogistics satellite : PipeItemsSatelliteLogistics.AllSatellites) {
 				if (satellite.satelliteId == satelliteId) {
 					CoreRoutedPipe satPipe = satellite;
-					if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+					if(satPipe == null || satPipe.getRouter() == null)
 						continue;
 					IRouter satRouter = satPipe.getRouter();
 					for (ExitRoute route:routes) {
@@ -864,7 +864,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 				for (final PipeItemsSatelliteLogistics satellite : PipeItemsSatelliteLogistics.AllSatellites) {
 					if (satellite.satelliteId == advancedSatelliteIdArray[i]) {
 						CoreRoutedPipe satPipe = satellite;
-						if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+						if(satPipe == null || satPipe.getRouter() == null)
 							continue;
 						IRouter satRouter = satPipe.getRouter();
 						for (ExitRoute route:routes) {
@@ -888,7 +888,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 			for (final PipeItemsSatelliteLogistics satellite : PipeItemsSatelliteLogistics.AllSatellites) {
 				if (satellite.satelliteId == satelliteId) {
 					CoreRoutedPipe satPipe = satellite;
-					if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+					if(satPipe == null || satPipe.getRouter() == null)
 						continue;
 					return satPipe.getRouter();
 				}
@@ -897,7 +897,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 			for (final PipeItemsSatelliteLogistics satellite : PipeItemsSatelliteLogistics.AllSatellites) {
 				if (satellite.satelliteId == advancedSatelliteIdArray[x]) {
 					CoreRoutedPipe satPipe = satellite;
-					if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+					if(satPipe == null || satPipe.getRouter() == null)
 						continue;
 					return satPipe.getRouter();
 				}
@@ -1242,7 +1242,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 			for (final PipeFluidSatellite satellite : PipeFluidSatellite.AllSatellites) {
 				if (satellite.satelliteId == liquidSatelliteId) {
 					CoreRoutedPipe satPipe = satellite;
-					if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+					if(satPipe == null || satPipe.getRouter() == null)
 						continue;
 					return satPipe.getRouter();
 				}
@@ -1251,7 +1251,7 @@ public class PipeItemsCraftingLogistics extends CoreRoutedPipe implements ICraft
 			for (final PipeFluidSatellite satellite : PipeFluidSatellite.AllSatellites) {
 				if (satellite.satelliteId == liquidSatelliteIdArray[x]) {
 					CoreRoutedPipe satPipe = satellite;
-					if(satPipe == null || satPipe.stillNeedReplace() || satPipe.getRouter() == null)
+					if(satPipe == null || satPipe.getRouter() == null)
 						continue;
 					return satPipe.getRouter();
 				}

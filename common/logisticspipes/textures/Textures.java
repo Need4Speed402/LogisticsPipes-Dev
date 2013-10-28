@@ -231,6 +231,9 @@ public class Textures {
 	 */
 	
 	private TextureType registerTexture(IconRegister par1IconRegister, String fileName, int flag) {
+		if(par1IconRegister != null) {
+			System.out.println();
+		}
 		TextureType texture = new TextureType();
 			texture.normal = index++;
 			texture.powered=texture.normal;

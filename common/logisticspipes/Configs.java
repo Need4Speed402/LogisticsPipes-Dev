@@ -84,7 +84,8 @@ public class Configs {
 	public static boolean DISPLAY_POPUP = true;
 
 	// BlockID
-	public static int LOGISTICS_SOLID_BLOCK_ID = 1101;
+	public static int LOGISTICS_BLOCK_PIPE_ID  = 1150;
+	public static int LOGISTICS_SOLID_BLOCK_ID = 1151;
 
 	// MultiThread
 	public static int MULTI_THREAD_NUMBER = 4;
@@ -210,6 +211,9 @@ public class Configs {
 		LOGISTICSPIPE_INVSYSCON_ID = CONFIGURATION.getItem(
 				"logisticInvSysCon.id", LOGISTICSPIPE_INVSYSCON_ID,
 				"The item id for the inventory system connector pipe").getInt();
+		LOGISTICS_BLOCK_PIPE_ID = CONFIGURATION.getBlock(
+				"logisticsPipeBlockId", LOGISTICS_BLOCK_PIPE_ID,
+				"The ID of the LogisticsPipes pipe Block").getInt();
 		LOGISTICS_SOLID_BLOCK_ID = CONFIGURATION.getBlock(
 				"logisticsSolidBlockId", LOGISTICS_SOLID_BLOCK_ID,
 				"The ID of the LogisticsPipes Solid Block").getInt();

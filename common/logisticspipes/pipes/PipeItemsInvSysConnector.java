@@ -216,12 +216,10 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe implements IDirectR
 
 	@Override
 	public void onAllowedRemoval() {
-		if(!stillNeedReplace) {
-			CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
-			SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
-			if(CRP != null) {
-				CRP.refreshRender(true);
-			}
+		CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
+		SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
+		if(CRP != null) {
+			CRP.refreshRender(true);
 		}
 		dropFreqCard();
 	}
@@ -229,12 +227,10 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe implements IDirectR
 
 	@Override
 	public void invalidate() {
-		if(!stillNeedReplace) {
-			CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
-			SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
-			if(CRP != null) {
-				CRP.refreshRender(true);
-			}
+		CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
+		SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
+		if(CRP != null) {
+			CRP.refreshRender(true);
 		}
 		init = false;
 		super.invalidate();
@@ -243,12 +239,10 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe implements IDirectR
 	
 	@Override
 	public void onChunkUnload() {
-		if(!stillNeedReplace) {
-			CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
-			SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
-			if(CRP != null) {
-				CRP.refreshRender(true);
-			}
+		CoreRoutedPipe CRP = SimpleServiceLocator.connectionManager.getConnectedPipe(getRouter());
+		SimpleServiceLocator.connectionManager.removeDirectConnection(getRouter());
+		if(CRP != null) {
+			CRP.refreshRender(true);
 		}
 		init = false;
 		super.onChunkUnload();
@@ -286,7 +280,7 @@ public class PipeItemsInvSysConnector extends CoreRoutedPipe implements IDirectR
 
 	@Override
 	public TextureType getCenterTexture() {
-		if(!stillNeedReplace && hasRemoteConnection()) {
+		if(hasRemoteConnection()) {
 			if(inventoryConnected()) {
 				return Textures.LOGISTICSPIPE_INVSYSCON_CON_TEXTURE;
 			} else {

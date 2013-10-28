@@ -7,6 +7,7 @@ import logisticspipes.blocks.LogisticsSecurityTileEntity;
 import logisticspipes.blocks.LogisticsSolderingTileEntity;
 import logisticspipes.blocks.crafting.LogisticsCraftingTableTileEntity;
 import logisticspipes.blocks.powertile.LogisticsPowerJunctionTileEntity;
+import logisticspipes.items.ItemLogisticsPipe;
 import logisticspipes.network.PacketHandler;
 import logisticspipes.network.packets.UpdateName;
 import logisticspipes.pipes.basic.LogisticsTileGenericPipe;
@@ -22,6 +23,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.Configuration;
 import net.minecraftforge.common.DimensionManager;
+import buildcraft.transport.Pipe;
 import buildcraft.transport.TileGenericPipe;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.common.registry.GameRegistry;
@@ -211,7 +213,6 @@ public class ServerProxy implements IProxy {
 		return getPipe(DimensionManager.getWorld(dimension), x, y, z);
 	}
 
-	// BuildCraft method
 	/**
 	 * Retrieves pipe at specified coordinates if any.
 	 * 
@@ -236,13 +237,18 @@ public class ServerProxy implements IProxy {
 
 		return (LogisticsTileGenericPipe) tile;
 	}
-	// BuildCraft method end
+
 	@Override
-	public void addLogisticsPipesOverride(IconRegister par1IconRegister, int index, String override1,
-			String override2, boolean flag) {
-		// TODO Auto-generated method stub
-		
+	public void addLogisticsPipesOverride(IconRegister par1IconRegister, int index, String override1, String override2, boolean flag) {}
+
+	@Override
+	public int getPipeRenderId() {
+		return 0;
 	}
-	
-	
+
+	@Override
+	public void setIconProviderFromPipe(ItemLogisticsPipe item, Pipe<?> dummyPipe) {}
+
+	@Override
+	public void registerPipeItemRenderer(int itemID) {}
 }

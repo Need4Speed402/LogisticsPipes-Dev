@@ -50,9 +50,11 @@ import logisticspipes.pipes.PipeLogisticsChassiMk2;
 import logisticspipes.pipes.PipeLogisticsChassiMk3;
 import logisticspipes.pipes.PipeLogisticsChassiMk4;
 import logisticspipes.pipes.PipeLogisticsChassiMk5;
+import logisticspipes.pipes.basic.ConverterPipeDump;
 import logisticspipes.pipes.basic.CoreRoutedPipe;
 import logisticspipes.pipes.basic.LogisticsBlockGenericPipe;
 import logisticspipes.pipes.basic.fluid.LogisticsFluidConnectorPipe;
+import logisticspipes.proxy.MainProxy;
 import logisticspipes.proxy.buildcraft.gates.ActionDisableLogistics;
 import logisticspipes.proxy.buildcraft.gates.LogisticsTriggerProvider;
 import logisticspipes.proxy.buildcraft.gates.TriggerCrafting;
@@ -61,7 +63,6 @@ import logisticspipes.proxy.buildcraft.gates.TriggerNeedsPower;
 import logisticspipes.proxy.buildcraft.gates.TriggerSupplierFailed;
 import logisticspipes.renderer.LogisticsPipeBlockRenderer;
 import logisticspipes.routing.RoutedEntityItem;
-import net.minecraft.block.Block;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
@@ -72,7 +73,6 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.ForgeDirection;
-import buildcraft.BuildCraftTransport;
 import buildcraft.api.gates.ActionManager;
 import buildcraft.api.gates.IAction;
 import buildcraft.api.gates.ITrigger;
@@ -81,11 +81,8 @@ import buildcraft.core.inventory.InvUtils;
 import buildcraft.core.utils.Localization;
 import buildcraft.core.utils.Utils;
 import buildcraft.transport.BlockGenericPipe;
-import buildcraft.transport.ItemPipe;
 import buildcraft.transport.Pipe;
 import buildcraft.transport.TileGenericPipe;
-import buildcraft.transport.TransportProxy;
-import buildcraft.transport.TransportProxyClient;
 import buildcraft.transport.TravelingItem;
 import buildcraft.transport.render.RenderPipe;
 import cpw.mods.fml.relauncher.Side;
@@ -253,43 +250,24 @@ public class BuildCraftProxy {
 		LogisticsPipes.logisticsRequestTable = createPipe(Configs.LOGISTICSPIPE_REQUEST_TABLE_ID, PipeBlockRequestTable.class, "Request Table", side);
 	}
 
-	/**
-	 * Registers a new logistics pipe with buildcraft. The buildcraft implementation does not allow for a new item
-	 * implementation (only the block)
-	 *
-	 * @param key   buildcraft key for the pipe
-	 * @param clas  Class name of the pipe block
-	 * @return the pipe
-	 */
-	@SuppressWarnings("unchecked")
-	public static ItemPipe registerPipe(int key, Class<? extends Pipe<?>> clas) {
-		ItemPipe item = new ItemLogisticsPipe(key, clas);
-
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static void registerBCPipe(int key) {
 		Map<Integer, Class<? extends Pipe>> pipes = null;
-		
 		try {
 			pipes = BlockGenericPipe.pipes;
 		} catch(NoSuchFieldError e) {
 			try {
 				pipes = (Map<Integer, Class<? extends Pipe>>) BlockGenericPipe.class.getDeclaredField("pipes").get(null);
 			} catch (Exception e2) {
-				return null;
+				return;
 			}
 		}
-		
-		pipes.put(item.itemID, clas);
-
-		Pipe<?> dummyPipe = BlockGenericPipe.createPipe(item.itemID);
-		if (dummyPipe != null) {
-			item.setPipeIconIndex(dummyPipe.getIconIndexForItem());
-			TransportProxy.proxy.setIconProviderFromPipe(item, dummyPipe);
-		}
-
-		return item;
+		pipes.put(key, (Class<? extends Pipe>)ConverterPipeDump.getClassForId(key));
 	}
-	
+
 	protected Item createPipe(int defaultID, Class <? extends Pipe<?>> clas, String descr, Side side) {
-		ItemPipe res = registerPipe (defaultID, clas);
+		ItemLogisticsPipe res = LogisticsBlockGenericPipe.registerPipe(defaultID, clas);
+		registerBCPipe(res.itemID);
 		res.setCreativeTab(LogisticsPipes.LPCreativeTab);
 		res.setUnlocalizedName(clas.getSimpleName());
 		Pipe<?> pipe = BlockGenericPipe.createPipe(res.itemID);
@@ -297,12 +275,12 @@ public class BuildCraftProxy {
 			res.setPipeIconIndex(((CoreRoutedPipe)pipe).getTextureType(ForgeDirection.UNKNOWN).normal);
 		}
 		
-		if(side.isClient()) {
-			if(pipe instanceof PipeBlockRequestTable) {
+		if(pipe instanceof PipeBlockRequestTable) {
+			if(side.isClient()) {
 				MinecraftForgeClient.registerItemRenderer(res.itemID, new LogisticsPipeBlockRenderer());
-			} else {
-			MinecraftForgeClient.registerItemRenderer(res.itemID, TransportProxyClient.pipeItemRenderer);
-		}
+			}
+		} else {
+			MainProxy.proxy.registerPipeItemRenderer(res.itemID);
 		}
 		if(defaultID != Configs.LOGISTICSPIPE_BASIC_ID && defaultID != Configs.LOGISTICSPIPE_LIQUID_CONNECTOR) {
 			registerShapelessResetRecipe(res,0,LogisticsPipes.LogisticsBasicPipe,0);
@@ -321,12 +299,6 @@ public class BuildCraftProxy {
 		}
 	}
 	
-	public boolean checkMaxItems() {
-		//TODO: where's this gone ....
-		return true;// 		BuildCraftTransport.instance.maxItemsInPipes >= 1000;
-	}
-
-
 	//IToolWrench interaction
 	public boolean isWrenchEquipped(EntityPlayer entityplayer) {
 		return (entityplayer.getCurrentEquippedItem() != null) && (entityplayer.getCurrentEquippedItem().getItem() instanceof IToolWrench);
@@ -362,25 +334,6 @@ public class BuildCraftProxy {
 			e.printStackTrace();
 		} catch(IllegalAccessException e) {
 			e.printStackTrace();
-		}
-	}
-
-	public void replaceBlockGenericPipe() {
-		if(Block.blocksList[BuildCraftTransport.genericPipeBlock.blockID] == BuildCraftTransport.genericPipeBlock) {
-			LogisticsPipes.log.info("BlockGenericPipe was found with ID: " + BuildCraftTransport.genericPipeBlock.blockID);
-			Block.blocksList[BuildCraftTransport.genericPipeBlock.blockID] = null;
-			
-			//Force IDfix to ignore this block
-			Block coalBlock = Block.coalBlock;
-			Block.coalBlock = null;
-			
-			BuildCraftTransport.genericPipeBlock = new LogisticsBlockGenericPipe(BuildCraftTransport.genericPipeBlock.blockID);
-
-			Block.coalBlock = coalBlock; //Restore the coalBlock
-			
-			LogisticsPipes.log.info("LogisticsBlockGenericPipe was added at ID: " + BuildCraftTransport.genericPipeBlock.blockID);
-		} else {
-			throw new UnsupportedOperationException("[LogisticsPipes|Main] Could not find BlockGenericPipe with ID: " + BuildCraftTransport.genericPipeBlock.blockID + ". We found " + Block.blocksList[BuildCraftTransport.genericPipeBlock.blockID] != null ? Block.blocksList[BuildCraftTransport.genericPipeBlock.blockID].getClass().getName() : "null");
 		}
 	}
 }

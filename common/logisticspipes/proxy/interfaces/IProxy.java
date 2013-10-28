@@ -1,5 +1,7 @@
 package logisticspipes.proxy.interfaces;
 
+import buildcraft.transport.Pipe;
+import logisticspipes.items.ItemLogisticsPipe;
 import logisticspipes.pipes.basic.LogisticsTileGenericPipe;
 import logisticspipes.utils.ItemIdentifier;
 import net.minecraft.client.renderer.texture.IconRegister;
@@ -22,4 +24,7 @@ public interface IProxy {
 	public void sendNameUpdateRequest(Player player);
 	public int getDimensionForWorld(World world);
 	public LogisticsTileGenericPipe getPipeInDimensionAt(int dimension, int x, int y, int z, EntityPlayer player);
+	public int getPipeRenderId();
+	public void setIconProviderFromPipe(ItemLogisticsPipe item, Pipe<?> dummyPipe);
+	public void registerPipeItemRenderer(int itemID);
 }

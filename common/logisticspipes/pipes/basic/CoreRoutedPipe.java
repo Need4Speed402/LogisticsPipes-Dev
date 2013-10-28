@@ -67,7 +67,6 @@ import logisticspipes.security.SecuritySettings;
 import logisticspipes.textures.Textures;
 import logisticspipes.textures.Textures.TextureType;
 import logisticspipes.ticks.QueuedTasks;
-import logisticspipes.ticks.WorldTickHandler;
 import logisticspipes.transport.PipeTransportLogistics;
 import logisticspipes.utils.AdjacentTile;
 import logisticspipes.utils.FluidIdentifier;
@@ -111,7 +110,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		Fast
 	}
 
-	protected boolean stillNeedReplace = true;
+	private boolean init = false;
 	
 	protected IRouter router;
 	protected String routerId;
@@ -251,6 +250,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 
 	public abstract ItemSendMode getItemSendMode();
 	
+	/*
 	private boolean checkTileEntity(boolean force) {
 		if(getWorld().getTotalWorldTime() % 10 == 0 || force) {
 			if(!(this.container instanceof LogisticsTileGenericPipe)) {
@@ -268,6 +268,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		}
 		return false;
 	}
+	*/
 	
 	/**
 	 * Designed to help protect against routing loops - if both pipes are on the same block, and of ISided overlapps, return true
@@ -322,22 +323,10 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	
 	@Override
 	public final void updateEntity() {
-		if(checkTileEntity(_initialInit)) {
-			stillNeedReplace = true;
+		if(!init) {
+			init = true;
+			firstInitialiseTick();
 			return;
-		} else {
-			if(stillNeedReplace) {
-				stillNeedReplace = false;
-				getWorld().notifyBlockChange(getX(), getY(), getZ(), getWorld().getBlockId(getX(), getY(), getZ()));
-				/* TravelingItems are just held by a pipe, they don't need to know their world
-				 * for(Triplet<IRoutedItem, ForgeDirection, ItemSendMode> item : _sendQueue) {
-					//assign world to any entityitem we created in readfromnbt
-					item.getValue1().getTravelingItem().setWorld(getWorld());
-				}*/
-				//first tick just create a router and do nothing.
-				firstInitialiseTick();
-				return;
-			}
 		}
 		if(repeatFor > 0) {
 			if(delayTo < System.currentTimeMillis()) {
@@ -368,17 +357,15 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		ignoreDisableUpdateEntity();
 		_initialInit = false;
 		if (!_sendQueue.isEmpty()){
-			if(getItemSendMode() == ItemSendMode.Normal || !SimpleServiceLocator.buildCraftProxy.checkMaxItems()) {
+			if(getItemSendMode() == ItemSendMode.Normal) {
 				Triplet<IRoutedItem, ForgeDirection, ItemSendMode> itemToSend = _sendQueue.getFirst();
 				sendRoutedItem(itemToSend.getValue1(), itemToSend.getValue2());
 				_sendQueue.removeFirst();
-				if(SimpleServiceLocator.buildCraftProxy.checkMaxItems()) {
-					for(int i=0;i < 16 && !_sendQueue.isEmpty() && _sendQueue.getFirst().getValue3() == ItemSendMode.Fast;i++) {
-						if (!_sendQueue.isEmpty()){
-							itemToSend = _sendQueue.getFirst();
-							sendRoutedItem(itemToSend.getValue1(), itemToSend.getValue2());
-							_sendQueue.removeFirst();
-						}
+				for(int i=0;i < 16 && !_sendQueue.isEmpty() && _sendQueue.getFirst().getValue3() == ItemSendMode.Fast;i++) {
+					if (!_sendQueue.isEmpty()){
+						itemToSend = _sendQueue.getFirst();
+						sendRoutedItem(itemToSend.getValue1(), itemToSend.getValue2());
+						_sendQueue.removeFirst();
 					}
 				}
 				sendQueueChanged(false);
@@ -598,7 +585,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	public void checkTexturePowered() {
 		if(Configs.LOGISTICS_POWER_USAGE_DISABLED) return;
 		if(getWorld().getTotalWorldTime() % 10 != 0) return;
-		if(stillNeedReplace || _initialInit || router == null) return;
+		if(_initialInit || router == null) return;
 		boolean flag;
 		if((flag = canUseEnergy(1)) != _textureBufferPowered) {
 			_textureBufferPowered = flag;
@@ -611,7 +598,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	public abstract TextureType getCenterTexture();
 	
 	public TextureType getTextureType(ForgeDirection connection) {
-		if(stillNeedReplace || _initialInit)
+		if(_initialInit)
 			return getCenterTexture();
 
 		if (connection == ForgeDirection.UNKNOWN){
@@ -700,10 +687,6 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	
 	@Override
 	public IRouter getRouter() {
-		if(stillNeedReplace) {
-			System.out.println("Hey, don't get routers for pipes that aren't ready");
-			new Throwable().printStackTrace();
-		}
 		if (router == null){
 			synchronized (routerIdLock) {
 				
@@ -728,7 +711,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	public void onNeighborBlockChange(int blockId) {
 		super.onNeighborBlockChange(blockId);
 		clearCache();
-		if(!stillNeedReplace && MainProxy.isServer(getWorld())) {
+		if(MainProxy.isServer(getWorld())) {
 			onNeighborBlockChange_Logistics();
 		}
 	}
@@ -956,16 +939,14 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		if(container != null && side != ForgeDirection.UNKNOWN && container.hasPlug(side)) {
 			return false;
 		}
-		if(!stillNeedReplace) {
-			if(getRouter().isSideDisconneceted(side) && !ignoreSystemDisconnection && !globalIgnoreConnectionDisconnection) {
-				return false;
-			}
+		if(getRouter().isSideDisconneceted(side) && !ignoreSystemDisconnection && !globalIgnoreConnectionDisconnection) {
+			return false;
 		}
 		return (super.canPipeConnect(tile, dir) || logisitcsIsPipeConnected(tile, dir)) && !disconnectPipe(tile, dir);
 	}
 	
 	public void connectionUpdate() {
-		if(container != null && !stillNeedReplace) {
+		if(container != null) {
 			container.scheduleNeighborChange();
 			getWorld().notifyBlockChange(getX(), getY(), getZ(), getWorld().getBlockId(getX(), getY(), getZ()));
 		}
@@ -983,9 +964,6 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 
 	public List<Pair<ILogisticsPowerProvider,List<IFilter>>> getRoutedPowerProviders() {
 		if(MainProxy.isClient(getWorld())) {
-			return null;
-		}
-		if(stillNeedReplace) {
 			return null;
 		}
 		return this.getRouter().getPowerProvider();
@@ -1062,10 +1040,6 @@ outer:
 		if(this.container instanceof LogisticsTileGenericPipe) {
 			((LogisticsTileGenericPipe)this.container).queueEvent(event, arguments);
 		}
-	}
-	
-	public boolean stillNeedReplace() {
-		return stillNeedReplace;
 	}
 	
 	@Override
@@ -1226,7 +1200,6 @@ outer:
 
 	public void addCrashReport(CrashReportCategory crashReportCategory) {
 		addRouterCrashReport(crashReportCategory);
-		crashReportCategory.addCrashSection("stillNeedReplace", stillNeedReplace);
 	}
 	
 	protected void addRouterCrashReport(CrashReportCategory crashReportCategory) {

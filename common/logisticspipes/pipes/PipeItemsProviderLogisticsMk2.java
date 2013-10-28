@@ -27,10 +27,7 @@ public class PipeItemsProviderLogisticsMk2 extends PipeItemsProviderLogistics {
 
 	@Override
 	protected int stacksToExtract() {
-		if(SimpleServiceLocator.buildCraftProxy.checkMaxItems()) {
-			return 8;
-		}
-		return 2;
+		return 8;
 	}
 	
 	@Override

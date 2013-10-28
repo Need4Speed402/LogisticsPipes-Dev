@@ -90,10 +90,6 @@ public class ServerRouter implements IRouter, Comparable<ServerRouter> {
 					run = false;
 					return;
 				}
-				//spinlock during the first tick, we can't touch the routing table, untill Update() has been called on every pipe.
-				for(int i=0;i<10 && p.stillNeedReplace();i++){Thread.sleep(10);}
-				if(p.stillNeedReplace())
-					return; // drop the pipe update if it still needs replace after 5 ticks.
 				CreateRouteTable(newVersion);
 			} catch(Exception e) {
 				e.printStackTrace();
@@ -306,12 +302,6 @@ public class ServerRouter implements IRouter, Comparable<ServerRouter> {
 		PathFinder finder = new PathFinder(thisPipe.container, Configs.LOGISTICS_DETECTION_COUNT, Configs.LOGISTICS_DETECTION_LENGTH);
 		power = finder.powerNodes;
 		adjacent = finder.result;
-		
-		for(CoreRoutedPipe pipe : adjacent.keySet()) {
-			if(pipe.stillNeedReplace()) {
-				return false;
-			}
-		}
 		
 		boolean[] oldSideDisconnected = sideDisconnected;
 		sideDisconnected = new boolean[6];

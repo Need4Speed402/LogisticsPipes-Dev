@@ -152,11 +152,7 @@ public class PipeTransportLogistics extends PipeTransportItems implements IItemT
 		
 		IRoutedItem routedItem = SimpleServiceLocator.buildCraftProxy.GetOrCreateRoutedItem(data);
 		ForgeDirection value;
-		if(this.getPipe().stillNeedReplace()){
-			routedItem.setDoNotBuffer(false);
-			value = ForgeDirection.UNKNOWN;
-		} else
-			value = getPipe().getRouteLayer().getOrientationForItem(routedItem, blocked);
+		value = getPipe().getRouteLayer().getOrientationForItem(routedItem, blocked);
 		if (value == null && MainProxy.isClient(getWorld())) {
 			routedItem.getItemStack().stackSize = 0;
 			items.scheduleRemoval(data);

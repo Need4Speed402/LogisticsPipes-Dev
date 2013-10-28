@@ -131,7 +131,6 @@ public class ModuleQuickSort extends LogisticsModule {
 					MainProxy.sendSpawnParticlePacket(Particles.OrangeParticle, getX(), getY(), getZ(), _world.getWorld(), 8);
 		
 					if(availableItems <= 0) break;
-					if(!SimpleServiceLocator.buildCraftProxy.checkMaxItems()) break;
 		
 					jamList.add(reply.getValue1());
 					reply = _itemSender.hasDestination(item.getKey(), false, jamList);
@@ -207,7 +206,6 @@ public class ModuleQuickSort extends LogisticsModule {
 				MainProxy.sendSpawnParticlePacket(Particles.OrangeParticle, getX(), getY(), getZ(), _world.getWorld(), 8);
 	
 				if(slot.stackSize == 0) break;
-				if(!SimpleServiceLocator.buildCraftProxy.checkMaxItems()) break;
 	
 				jamList.add(reply.getValue1());
 				reply = _itemSender.hasDestination(ItemIdentifier.get(slot), false, jamList);
