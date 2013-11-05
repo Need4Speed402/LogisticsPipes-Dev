@@ -194,7 +194,6 @@ public class LogisticsPipes {
 	public static Item LogisticsFluidSatellitePipe;
 	public static Item LogisticsFluidSupplierPipeMk1;
 	public static Item LogisticsFluidSupplierPipeMk2;
-	public static Item LogisticsFluidConnectorPipe;
 	public static Item LogisticsFluidInsertionPipe;
 	public static Item LogisticsFluidExtractorPipe;
 

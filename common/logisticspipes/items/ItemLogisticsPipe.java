@@ -13,7 +13,10 @@ import java.util.List;
 import java.util.logging.Level;
 
 import logisticspipes.LogisticsPipes;
+import logisticspipes.pipes.basic.CoreRoutedPipe;
 import logisticspipes.pipes.basic.LogisticsBlockGenericPipe;
+import logisticspipes.renderer.LogisticsPipeItemRenderer;
+import logisticspipes.textures.Textures;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -22,9 +25,6 @@ import net.minecraft.world.World;
 
 import org.lwjgl.input.Keyboard;
 
-import buildcraft.api.core.IIconProvider;
-import buildcraft.core.utils.Localization;
-import buildcraft.transport.Pipe;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
@@ -37,9 +37,7 @@ public class ItemLogisticsPipe extends LogisticsItem {
 		super(key);
 		setCreativeTab(LogisticsPipes.LPCreativeTab);
 	}
-	
-	@SideOnly(Side.CLIENT)
-	private IIconProvider iconProvider;
+
 	private int pipeIconIndex;
 
 	@Override
@@ -75,7 +73,7 @@ public class ItemLogisticsPipe extends LogisticsItem {
 		if (itemstack.stackSize == 0)
 			return false;
 		if (world.canPlaceEntityOnSide(blockID, i, j, k, false, side, entityplayer, itemstack)) {
-			Pipe<?> pipe = LogisticsBlockGenericPipe.createPipe(itemID);
+			CoreRoutedPipe pipe = LogisticsBlockGenericPipe.createPipe(itemID);
 			if (pipe == null) {
 				LogisticsPipes.log.log(Level.WARNING, "Pipe failed to create during placement at {0},{1},{2}", new Object[]{i, j, k});
 				return true;
@@ -91,11 +89,6 @@ public class ItemLogisticsPipe extends LogisticsItem {
 			return false;
 	}
 
-	@SideOnly(Side.CLIENT)
-	public void setPipesIcons(IIconProvider iconProvider) {
-		this.iconProvider = iconProvider;
-	}
-
 	public void setPipeIconIndex(int index) {
 		this.pipeIconIndex = index;
 	}
@@ -103,8 +96,8 @@ public class ItemLogisticsPipe extends LogisticsItem {
 	@Override
 	@SideOnly(Side.CLIENT)
 	public Icon getIconFromDamage(int par1) {
-		if (iconProvider != null) { // invalid pipes won't have this set
-			return iconProvider.getIcon(pipeIconIndex);
+		if (Textures.LPpipeIconProvider != null) { // invalid pipes won't have this set
+			return Textures.LPpipeIconProvider.getIcon(pipeIconIndex);
 		} else {
 			return null;
 		}

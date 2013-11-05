@@ -49,7 +49,6 @@ public class Configs {
 	public static int LOGISTICSPIPE_FIREWALL_ID = 6897;
 	public static int LOGISTICSPIPE_REQUEST_TABLE_ID = 6898;
 
-	public static int LOGISTICSPIPE_LIQUID_CONNECTOR = 6901;
 	public static int LOGISTICSPIPE_LIQUID_BASIC = 6902;
 	public static int LOGISTICSPIPE_LIQUID_INSERTION = 6903;
 	public static int LOGISTICSPIPE_LIQUID_PROVIDER = 6904;
@@ -221,10 +220,6 @@ public class Configs {
 				"logisticsPipeFirewall.id", LOGISTICSPIPE_FIREWALL_ID,
 				"The item id for the firewall logistics pipe").getInt();
 
-		LOGISTICSPIPE_LIQUID_CONNECTOR = CONFIGURATION.getItem(
-				"logisticPipeLiquidConnector.id",
-				LOGISTICSPIPE_LIQUID_CONNECTOR,
-				"The item id for the liquid connector pipe.").getInt();
 		LOGISTICSPIPE_LIQUID_BASIC = CONFIGURATION.getItem(
 				"logisticPipeLiquidBasic.id", LOGISTICSPIPE_LIQUID_BASIC,
 				"The item id for the liquid basic pipe.").getInt();

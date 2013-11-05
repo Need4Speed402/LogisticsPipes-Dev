@@ -884,15 +884,6 @@ public class RecipeManager {
 			Character.valueOf('i'), Item.ingotIron, 
 		});
 		
-		craftingManager.addRecipe(new ItemStack(LogisticsPipes.LogisticsFluidConnectorPipe, 4), CraftingDependency.Basic_Liquid, new Object[] {
-			"GPG",
-			"gLg",
-			Character.valueOf('L'), LogisticsPipes.LogisticsFluidBasicPipe,
-			Character.valueOf('P'), BuildCraftTransport.pipeFluidsGold,
-			Character.valueOf('G'), Block.glass,
-			Character.valueOf('g'), Item.ingotGold
-		});
-		
 		craftingManager.addRecipe(new ItemStack(LogisticsPipes.LogisticsFluidBasicPipe, 1), CraftingDependency.Basic_Liquid, new Object[] {
 			"w",
 			"B",

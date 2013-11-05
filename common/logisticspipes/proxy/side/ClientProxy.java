@@ -5,7 +5,6 @@ import logisticspipes.blocks.LogisticsSecurityTileEntity;
 import logisticspipes.blocks.LogisticsSolderingTileEntity;
 import logisticspipes.blocks.crafting.LogisticsCraftingTableTileEntity;
 import logisticspipes.blocks.powertile.LogisticsPowerJunctionTileEntity;
-import logisticspipes.items.ItemLogisticsPipe;
 import logisticspipes.pipefxhandlers.Particles;
 import logisticspipes.pipefxhandlers.PipeFXRenderHandler;
 import logisticspipes.pipefxhandlers.providers.EntityBlueSparkleFXProvider;
@@ -34,7 +33,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.DimensionManager;
-import buildcraft.transport.Pipe;
 import buildcraft.transport.TileGenericPipe;
 import buildcraft.transport.render.PipeRendererTESR;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -191,11 +189,6 @@ public class ClientProxy implements IProxy {
 				Textures.LPpipeIconProvider.setIcon(index, par1IconRegister.registerIcon("logisticspipes:"+override1.replace("pipes/", "pipes/overlay_gen/")+"/"+override2.replace("pipes/status_overlay/","")));
 			}
 		}
-	}
-
-	@Override
-	public void setIconProviderFromPipe(ItemLogisticsPipe item, Pipe<?> dummyPipe) {
-		item.setPipesIcons(dummyPipe.getIconProvider());
 	}
 
 	@Override

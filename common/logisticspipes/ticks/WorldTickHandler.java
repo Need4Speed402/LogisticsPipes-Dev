@@ -12,14 +12,12 @@ import logisticspipes.utils.FluidIdentifier;
 import logisticspipes.utils.ItemIdentifier;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
-import buildcraft.transport.Pipe;
-import buildcraft.transport.TileGenericPipe;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 
 public class WorldTickHandler implements ITickHandler {
 	
-	public static LinkedList<TileGenericPipe> serverPipesToReplace = new LinkedList<TileGenericPipe>();
+	public static LinkedList<TileEntity> serverPipesToReplace = new LinkedList<TileEntity>();
 	
 	@Override
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {}
@@ -28,7 +26,7 @@ public class WorldTickHandler implements ITickHandler {
 	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
 		if(type.contains(TickType.SERVER)) {
 			while(serverPipesToReplace.size() > 0) {
-				TileGenericPipe tile = serverPipesToReplace.get(0);
+				TileEntity tile = serverPipesToReplace.get(0);
 				int x = tile.xCoord;
 				int y = tile.yCoord;
 				int z = tile.zCoord;
@@ -39,7 +37,14 @@ public class WorldTickHandler implements ITickHandler {
 					serverPipesToReplace.remove(0);
 					continue;
 				}
-				ConverterPipe cPipe = (ConverterPipe) tile.pipe;
+				ConverterPipe cPipe;
+				if(tile instanceof TileGenericPipe) {
+					cPipe = (ConverterPipe) ((TileGenericPipe)tile).pipe;
+					((TileGenericPipe)tile).pipe = null;
+				} else {
+					cPipe = (ConverterPipe) ((LogisticsTileGenericPipe)tile).pipe;
+					((LogisticsTileGenericPipe)tile).pipe = null;
+				}
 				world.setBlock(x, y, z, 0);
 				int newId = Integer.valueOf(cPipe.classId);
 				Pipe<?> newPipe = LogisticsBlockGenericPipe.createPipe(newId);
@@ -51,7 +56,6 @@ public class WorldTickHandler implements ITickHandler {
 				}
 				LogisticsTileGenericPipe newTile = (LogisticsTileGenericPipe) newTileT;
 				newTile.readFromNBT(cPipe.nbtSettings);
-				tile.pipe = null;
 				serverPipesToReplace.remove(0);
 			}
 		}

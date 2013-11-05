@@ -25,6 +25,5 @@ public interface IProxy {
 	public int getDimensionForWorld(World world);
 	public LogisticsTileGenericPipe getPipeInDimensionAt(int dimension, int x, int y, int z, EntityPlayer player);
 	public int getPipeRenderId();
-	public void setIconProviderFromPipe(ItemLogisticsPipe item, Pipe<?> dummyPipe);
 	public void registerPipeItemRenderer(int itemID);
 }

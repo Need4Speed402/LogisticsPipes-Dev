@@ -53,7 +53,6 @@ import logisticspipes.pipes.PipeLogisticsChassiMk5;
 import logisticspipes.pipes.basic.ConverterPipeDump;
 import logisticspipes.pipes.basic.CoreRoutedPipe;
 import logisticspipes.pipes.basic.LogisticsBlockGenericPipe;
-import logisticspipes.pipes.basic.fluid.LogisticsFluidConnectorPipe;
 import logisticspipes.proxy.MainProxy;
 import logisticspipes.proxy.buildcraft.gates.ActionDisableLogistics;
 import logisticspipes.proxy.buildcraft.gates.LogisticsTriggerProvider;
@@ -238,7 +237,6 @@ public class BuildCraftProxy {
 		
 		LogisticsPipes.LogisticsFluidSupplierPipeMk1 = createPipe(Configs.LOGISTICSPIPE_LIQUIDSUPPLIER_ID, PipeItemsFluidSupplier.class, "Fluid Supplier Logistics Pipe", side);
 		
-		LogisticsPipes.LogisticsFluidConnectorPipe = createPipe(Configs.LOGISTICSPIPE_LIQUID_CONNECTOR, LogisticsFluidConnectorPipe.class, "Logistics Fluid Connector Pipe", side);
 		LogisticsPipes.LogisticsFluidBasicPipe = createPipe(Configs.LOGISTICSPIPE_LIQUID_BASIC, PipeFluidBasic.class, "Basic Logistics Fluid Pipe", side);
 		LogisticsPipes.LogisticsFluidInsertionPipe = createPipe(Configs.LOGISTICSPIPE_LIQUID_INSERTION, PipeFluidInsertion.class, "Logistics Fluid Insertion Pipe", side);
 		LogisticsPipes.LogisticsFluidProviderPipe = createPipe(Configs.LOGISTICSPIPE_LIQUID_PROVIDER, PipeFluidProvider.class, "Logistics Fluid Provider Pipe", side);
@@ -265,7 +263,7 @@ public class BuildCraftProxy {
 		pipes.put(key, (Class<? extends Pipe>)ConverterPipeDump.getClassForId(key));
 	}
 
-	protected Item createPipe(int defaultID, Class <? extends Pipe<?>> clas, String descr, Side side) {
+	protected Item createPipe(int defaultID, Class <? extends CoreRoutedPipe> clas, String descr, Side side) {
 		ItemLogisticsPipe res = LogisticsBlockGenericPipe.registerPipe(defaultID, clas);
 		registerBCPipe(res.itemID);
 		res.setCreativeTab(LogisticsPipes.LPCreativeTab);
@@ -282,7 +280,7 @@ public class BuildCraftProxy {
 		} else {
 			MainProxy.proxy.registerPipeItemRenderer(res.itemID);
 		}
-		if(defaultID != Configs.LOGISTICSPIPE_BASIC_ID && defaultID != Configs.LOGISTICSPIPE_LIQUID_CONNECTOR) {
+		if(defaultID != Configs.LOGISTICSPIPE_BASIC_ID) {
 			registerShapelessResetRecipe(res,0,LogisticsPipes.LogisticsBasicPipe,0);
 		}
 		pipelist.add(res);

@@ -81,9 +81,6 @@ public abstract class FluidRoutedPipe extends CoreRoutedPipe implements IItemTra
 			if (liq.getTankInfo(connection.getOpposite()) != null && liq.getTankInfo(connection.getOpposite()).length > 0)
 				return true;
 		}
-		if(tile instanceof TileGenericPipe) {
-			return ((TileGenericPipe)tile).pipe instanceof LogisticsFluidConnectorPipe;
-		}
 		return false;
 	}
 	
