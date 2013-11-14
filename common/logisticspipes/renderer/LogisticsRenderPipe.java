@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 
 import logisticspipes.pipes.PipeItemsCraftingLogistics;
+import logisticspipes.pipes.basic.CoreRoutedPipe;
 import logisticspipes.pipes.basic.LogisticsTileGenericPipe;
+import logisticspipes.pipes.basic.fluid.FluidRoutedPipe;
 import logisticspipes.transport.PipeFluidTransportLogistics;
 import logisticspipes.utils.ItemIdentifierStack;
 import net.minecraft.block.Block;
@@ -96,7 +98,7 @@ public class LogisticsRenderPipe extends TileEntitySpecialRenderer {
 		if (pipe.pipe == null) return;
 		renderSolids(pipe.pipe, x, y, z);
 		if (pipe.pipe.transport instanceof PipeFluidTransportLogistics) {
-			renderFluids((Pipe<PipeFluidTransportLogistics>)pipe.pipe, x, y, z);
+			renderFluids((FluidRoutedPipe)pipe.pipe, x, y, z);
 		}
 		if(pipe.pipe instanceof PipeItemsCraftingLogistics) {
 			renderCraftingPipe((PipeItemsCraftingLogistics) pipe.pipe, x, y, z);
@@ -379,9 +381,9 @@ public class LogisticsRenderPipe extends TileEntitySpecialRenderer {
 	}
 
 	//BC copy, except where marked with XXX
-	private void renderFluids(Pipe<PipeFluidTransportLogistics> pipe, double x, double y, double z) {
+	private void renderFluids(FluidRoutedPipe pipe, double x, double y, double z) {
 		//XXX PipeTransportFluids trans = pipe.transport;
-		PipeFluidTransportLogistics trans = (PipeFluidTransportLogistics)(pipe.transport);
+		PipeFluidTransportLogistics trans = (PipeFluidTransportLogistics) pipe.transport;
 
 		boolean needsRender = false;
 		for (int i = 0; i < 7; ++i) {
@@ -595,7 +597,7 @@ public class LogisticsRenderPipe extends TileEntitySpecialRenderer {
 		return d;
 	}
 
-	private void renderSolids(Pipe<PipeTransportItems> pipe, double x, double y, double z) {
+	private void renderSolids(CoreRoutedPipe pipe, double x, double y, double z) {
 		GL11.glPushMatrix();
 		GL11.glDisable(GL11.GL_LIGHTING);
 

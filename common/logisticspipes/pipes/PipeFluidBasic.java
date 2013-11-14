@@ -1,5 +1,8 @@
 package logisticspipes.pipes;
 
+import buildcraft.api.core.IIconProvider;
+import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import logisticspipes.LogisticsPipes;
 import logisticspipes.interfaces.routing.IFluidSink;
 import logisticspipes.network.GuiIDs;

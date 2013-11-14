@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 import logisticspipes.LogisticsPipes;
 import logisticspipes.pipes.basic.ConverterPipe;
+import logisticspipes.pipes.basic.CoreRoutedPipe;
 import logisticspipes.pipes.basic.LogisticsBlockGenericPipe;
 import logisticspipes.pipes.basic.LogisticsTileGenericPipe;
 import logisticspipes.proxy.SimpleServiceLocator;
@@ -12,12 +13,13 @@ import logisticspipes.utils.FluidIdentifier;
 import logisticspipes.utils.ItemIdentifier;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
+import buildcraft.transport.TileGenericPipe;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.TickType;
 
 public class WorldTickHandler implements ITickHandler {
-	
-	public static LinkedList<TileEntity> serverPipesToReplace = new LinkedList<TileEntity>();
+
+	public static LinkedList<TileEntity> serverTilesToReplace = new LinkedList<TileEntity>();
 	
 	@Override
 	public void tickStart(EnumSet<TickType> type, Object... tickData) {}
@@ -25,8 +27,8 @@ public class WorldTickHandler implements ITickHandler {
 	@Override
 	public void tickEnd(EnumSet<TickType> type, Object... tickData) {
 		if(type.contains(TickType.SERVER)) {
-			while(serverPipesToReplace.size() > 0) {
-				TileEntity tile = serverPipesToReplace.get(0);
+			while(serverTilesToReplace.size() > 0) {
+				TileEntity tile = serverTilesToReplace.get(0);
 				int x = tile.xCoord;
 				int y = tile.yCoord;
 				int z = tile.zCoord;
@@ -34,29 +36,27 @@ public class WorldTickHandler implements ITickHandler {
 				//TE or its chunk might've gone away while we weren't looking
 				TileEntity tilecheck = world.getBlockTileEntity(x, y, z);
 				if(tilecheck != tile) {
-					serverPipesToReplace.remove(0);
+					serverTilesToReplace.remove(0);
 					continue;
 				}
-				ConverterPipe cPipe;
 				if(tile instanceof TileGenericPipe) {
-					cPipe = (ConverterPipe) ((TileGenericPipe)tile).pipe;
+					ConverterPipe cPipe = (ConverterPipe) ((TileGenericPipe)tile).pipe;
 					((TileGenericPipe)tile).pipe = null;
+					int newId = Integer.valueOf(cPipe.classId);
+					world.setBlock(x, y, z, 0);
+					CoreRoutedPipe newPipe = LogisticsBlockGenericPipe.createPipe(newId);
+					LogisticsBlockGenericPipe.placePipe(newPipe, world, x, y, z, LogisticsPipes.LogisticsBlockGenericPipe.blockID, 0);
+					TileEntity newTileT = world.getBlockTileEntity(x, y, z);
+					if(!(newTileT instanceof LogisticsTileGenericPipe)) {
+						throw new UnsupportedOperationException();
+					}
+					LogisticsTileGenericPipe newTile = (LogisticsTileGenericPipe) newTileT;
+					newTile.readFromNBT(cPipe.nbtSettings);
 				} else {
-					cPipe = (ConverterPipe) ((LogisticsTileGenericPipe)tile).pipe;
-					((LogisticsTileGenericPipe)tile).pipe = null;
+					LogisticsBlockGenericPipe.placePipe(null, world, x, y, z, LogisticsPipes.LogisticsBlockGenericPipe.blockID, 0);
+					world.setBlockTileEntity(x, y, z, tilecheck);
 				}
-				world.setBlock(x, y, z, 0);
-				int newId = Integer.valueOf(cPipe.classId);
-				Pipe<?> newPipe = LogisticsBlockGenericPipe.createPipe(newId);
-				if(newPipe instanceof ConverterPipe) throw new UnsupportedOperationException();
-				LogisticsBlockGenericPipe.placePipe(newPipe, world, x, y, z, LogisticsPipes.LogisticsBlockGenericPipe.blockID, 0);
-				TileEntity newTileT = world.getBlockTileEntity(x, y, z);
-				if(!(newTileT instanceof LogisticsTileGenericPipe)) {
-					throw new UnsupportedOperationException();
-				}
-				LogisticsTileGenericPipe newTile = (LogisticsTileGenericPipe) newTileT;
-				newTile.readFromNBT(cPipe.nbtSettings);
-				serverPipesToReplace.remove(0);
+				serverTilesToReplace.remove(0);
 			}
 		}
 		ItemIdentifier.tick();

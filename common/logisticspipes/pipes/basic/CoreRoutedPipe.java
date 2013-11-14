@@ -11,6 +11,7 @@ package logisticspipes.pipes.basic;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,6 +67,7 @@ import logisticspipes.security.PermissionException;
 import logisticspipes.security.SecuritySettings;
 import logisticspipes.textures.Textures;
 import logisticspipes.textures.Textures.TextureType;
+import logisticspipes.textures.provider.LPPipeIconProvider;
 import logisticspipes.ticks.QueuedTasks;
 import logisticspipes.transport.PipeTransportLogistics;
 import logisticspipes.utils.AdjacentTile;
@@ -79,6 +81,9 @@ import logisticspipes.utils.WorldUtil;
 import logisticspipes.utils.tuples.Pair;
 import logisticspipes.utils.tuples.Triplet;
 import net.minecraft.crash.CrashReportCategory;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
@@ -89,21 +94,12 @@ import net.minecraft.util.ChatMessageComponent;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import net.minecraftforge.fluids.FluidStack;
-import buildcraft.BuildCraftTransport;
-import buildcraft.api.core.IIconProvider;
-import buildcraft.api.core.Position;
-import buildcraft.api.gates.IAction;
-import buildcraft.core.CoreConstants;
-import buildcraft.transport.Pipe;
-import buildcraft.transport.PipeTransportItems;
-import buildcraft.transport.TileGenericPipe;
-import buildcraft.transport.TravelingItem;
 import cpw.mods.fml.common.network.Player;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 @CCType(name = "LogisticsPipes:Normal")
-public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implements IRequestItems, IAdjacentWorldAccess, ITrackStatistics, IWorldProvider, IWatchingHandler, IRoutedPowerProvider {
+public abstract class CoreRoutedPipe implements IRequestItems, IAdjacentWorldAccess, ITrackStatistics, IWorldProvider, IWatchingHandler, IRoutedPowerProvider {
 
 	public enum ItemSendMode {
 		Normal,
@@ -123,7 +119,6 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	protected boolean _initialInit = true;
 	
 	private boolean enabled = true;
-	private Field itemIDAccess;
 	private int cachedItemID = -1;
 	private boolean blockRemove = false;
 	private boolean destroyByPlayer = false;
@@ -155,18 +150,28 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 
 	protected List<IInventory> _cachedAdjacentInventories;
 
-	//public BaseRoutingLogic logic;
-	// from BaseRoutingLogic
 	protected int throttleTime = 20;
 	private int throttleTimeLeft = 20 + new Random().nextInt(Configs.LOGISTICS_DETECTION_FREQUENCY);
+
+	public int[] signalStrength = new int[]{0, 0, 0, 0};
+	public LogisticsTileGenericPipe container;
+	public final PipeTransportLogistics transport;
+	public final int itemID;
+	public boolean[] wireSet = new boolean[] {false, false, false, false};
+	@SuppressWarnings("rawtypes")
+	private static Map<Class, TilePacketWrapper> networkWrappers = new HashMap<Class, TilePacketWrapper>();
 	
 	public CoreRoutedPipe(int itemID) {
 		this(new PipeTransportLogistics(), itemID);
 	}
 
 	public CoreRoutedPipe(PipeTransportLogistics transport, int itemID) {
-		super(transport, itemID);
-		//this.logic = logic;
+		this.transport = transport;
+		this.itemID = itemID;
+
+		if (!networkWrappers.containsKey(this.getClass())) {
+			networkWrappers.put(this.getClass(), new TilePacketWrapper(new Class[]{TileGenericPipe.class, this.transport.getClass()}));
+		}
 		((PipeTransportItems) transport).allowBouncing = true;
 		
 		pipecount++;
@@ -321,7 +326,6 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	 */
 	public void ignoreDisableUpdateEntity() {}
 	
-	@Override
 	public final void updateEntity() {
 		if(!init) {
 			init = true;
@@ -346,8 +350,13 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		//update router before ticking logic/transport
 		getRouter().update(getWorld().getTotalWorldTime() % Configs.LOGISTICS_DETECTION_FREQUENCY == _delayOffset || _initialInit);
 		getUpgradeManager().securityTick();
-		super.updateEntity();
-		
+
+		transport.updateEntity();
+
+		// Do not try to update gates client side.
+		if (container.worldObj.isRemote)
+			return;
+
 		// from BaseRoutingLogic
 		if (--throttleTimeLeft <= 0) {
 			throttledUpdateEntity();
@@ -465,13 +474,23 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	}
 // end FromBaseRoutingLogic
 	
-	@Override
 	public final void onBlockRemoval() {
 		revertItemID();
 		if(canBeDestroyed() || destroyByPlayer) {
 			try {
 				onAllowedRemoval();
-				super.onBlockRemoval();
+
+				//TODO
+				/*
+				for (ForgeDirection direction : ForgeDirection.VALID_DIRECTIONS) {
+					if (container.hasFacade(direction)) {
+						container.dropFacade(direction);
+					}
+					if (container.hasPlug(direction)) {
+						container.removeAndDropPlug(direction);
+					}
+				}
+				*/
 				//invalidate() removes the router
 //				if (logic instanceof BaseRoutingLogic){
 //					((BaseRoutingLogic)logic).destroy();
@@ -497,9 +516,9 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 				@Override
 				public Object call() throws Exception {
 					tileCache.validate();
-					worldCache.setBlock(xCache, yCache, zCache, BuildCraftTransport.genericPipeBlock.blockID);
+					worldCache.setBlock(xCache, yCache, zCache, LogisticsPipes.LogisticsBlockGenericPipe.blockID);
 					worldCache.setBlockTileEntity(xCache, yCache, zCache, tileCache);
-					worldCache.notifyBlockChange(xCache, yCache, zCache, BuildCraftTransport.genericPipeBlock.blockID);
+					worldCache.notifyBlockChange(xCache, yCache, zCache, LogisticsPipes.LogisticsBlockGenericPipe.blockID);
 					blockRemove = false;
 					return null;
 				}
@@ -507,48 +526,27 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		}
 	}
 	
-	@Override
 	public void invalidate() {
-		super.invalidate();
 		if(router != null) {
 			router.destroy();
 			router = null;
 		}
 	}
 	
-	@Override
 	public void onChunkUnload() {
-		super.onChunkUnload();
 		if(router != null) {
 			router.clearPipeCache();
 			router.clearInterests();
 		}
 	}
 	
-	@Override
 	public void dropContents() {
 		if(MainProxy.isClient(getWorld())) return;
 		if(canBeDestroyed() || destroyByPlayer) {
-			super.dropContents();
+			transport.dropContents();
 		} else {
-			if(itemIDAccess == null) {
-				try {
-					itemIDAccess = Pipe.class.getDeclaredField("itemID");
-					itemIDAccess.setAccessible(true);
-				} catch (NoSuchFieldException e) {
-					e.printStackTrace();
-				} catch (SecurityException e) {
-					e.printStackTrace();
-				}
-			}
 			cachedItemID = itemID;
-			try {
-				itemIDAccess.setInt(this, LogisticsPipes.LogisticsBrokenItem.itemID);
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-			}
+			itemID =  LogisticsPipes.LogisticsBrokenItem.itemID;
 			final World worldCache = getWorld();
 			final int xCache = getX();
 			final int yCache = getY();
@@ -559,9 +557,9 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 				@Override
 				public Object call() throws Exception {
 					revertItemID();
-					worldCache.setBlock(xCache, yCache, zCache, BuildCraftTransport.genericPipeBlock.blockID);
+					worldCache.setBlock(xCache, yCache, zCache, LogisticsPipes.LogisticsBlockGenericPipe.blockID);
 					worldCache.setBlockTileEntity(xCache, yCache, zCache, tileCache);
-					worldCache.notifyBlockChange(xCache, yCache, zCache, BuildCraftTransport.genericPipeBlock.blockID);
+					worldCache.notifyBlockChange(xCache, yCache, zCache, LogisticsPipes.LogisticsBlockGenericPipe.blockID);
 					blockRemove = false;
 					return null;
 				}
@@ -572,7 +570,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 	private void revertItemID() {
 		if(cachedItemID != -1) {
 			try {
-				itemIDAccess.setInt(this, cachedItemID);
+				itemID = cachedItemID;
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (IllegalAccessException e) {
@@ -619,10 +617,9 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		return Textures.LOGISTICSPIPE_NOTROUTED_TEXTURE;
 	}
 	
-	@Override
 	public void writeToNBT(NBTTagCompound nbttagcompound) {
-		super.writeToNBT(nbttagcompound);
-		
+		transport.writeToNBT(nbttagcompound);
+
 		synchronized (routerIdLock) {
 			if (routerId == null || routerId.isEmpty()){
 				if(router != null)
@@ -655,10 +652,9 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		nbttagcompound.setTag("sendqueue", sendqueue);
 	}
 	
-	@Override
 	public void readFromNBT(NBTTagCompound nbttagcompound) {
-		super.readFromNBT(nbttagcompound);
-		
+		transport.readFromNBT(nbttagcompound);
+
 		synchronized (routerIdLock) {
 			routerId = nbttagcompound.getString("routerId");
 		}
@@ -707,9 +703,8 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		this.enabled = enabled; 
 	}
 
-	@Override
 	public void onNeighborBlockChange(int blockId) {
-		super.onNeighborBlockChange(blockId);
+		transport.onNeighborBlockChange(blockId);
 		clearCache();
 		if(MainProxy.isServer(getWorld())) {
 			onNeighborBlockChange_Logistics();
@@ -718,14 +713,8 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 
 	public void onNeighborBlockChange_Logistics(){}
 	
-	@Override
-	public void onBlockPlaced() {
-		super.onBlockPlaced();
-	}
-	
 	public abstract LogisticsModule getLogisticsModule();
 	
-	@Override
 	public final boolean blockActivated(EntityPlayer entityplayer) {
 		
 		
@@ -798,7 +787,7 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 			}
 			return true;
 		}
-		return super.blockActivated(entityplayer);
+		return false;
 	}
 	
 	protected boolean handleClick(EntityPlayer entityplayer, SecuritySettings settings) {
@@ -924,10 +913,10 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		return false;
 	}
 	
-	@Override
-	public final boolean canPipeConnect(TileEntity tile, ForgeDirection dir) {
+	/*public final boolean canPipeConnect(TileEntity tile, ForgeDirection dir) {
 		return canPipeConnect(tile, dir, false);
 	}
+	*/
 	
 	public boolean globalIgnoreConnectionDisconnection = false;
 	
@@ -936,13 +925,13 @@ public abstract class CoreRoutedPipe extends Pipe<PipeTransportLogistics> implem
 		if(getUpgradeManager().isSideDisconnected(side)) {
 			return false;
 		}
-		if(container != null && side != ForgeDirection.UNKNOWN && container.hasPlug(side)) {
+		if(container != null && side != ForgeDirection.UNKNOWN/* && container.hasPlug(side)*/) {
 			return false;
 		}
 		if(getRouter().isSideDisconneceted(side) && !ignoreSystemDisconnection && !globalIgnoreConnectionDisconnection) {
 			return false;
 		}
-		return (super.canPipeConnect(tile, dir) || logisitcsIsPipeConnected(tile, dir)) && !disconnectPipe(tile, dir);
+		return (transport.canPipeConnect(tile, dir) || logisitcsIsPipeConnected(tile, dir)) && !disconnectPipe(tile, dir);
 	}
 	
 	public void connectionUpdate() {
@@ -1152,13 +1141,11 @@ outer:
 		return count;
 	}
 	
-	@Override
 	@SideOnly(Side.CLIENT)
-	public IIconProvider getIconProvider() {
+	public LPPipeIconProvider getLPIconProvider() {
 		return Textures.LPpipeIconProvider;
 	}
-	
-	@Override
+
 	public final int getIconIndex(ForgeDirection connection) {
 		TextureType texture = getTextureType(connection);
 		if(_textureBufferPowered) {
@@ -1172,29 +1159,16 @@ outer:
 
 	@Override
 	public final int getX() {
-		//TODO: what if container is null; pipes don't have a coord any more.
-/*		if(this.container == null) {
-			return getX();
-		}*/
 		return this.container.xCoord;
 	}
 
 	@Override
 	public final int getY() {
-		/*
-		if(this.container == null) {
-			return getY();
-		}*/
 		return this.container.yCoord;
 	}
 
 	@Override
 	public final int getZ() {
-		/*
-		if(this.container == null) {
-			return getZ();
-		}
-		*/
 		return this.container.zCoord;
 	}
 
@@ -1210,7 +1184,8 @@ outer:
 		return false;
 	}
 	
-	/* --- Trigger --- */
+	/*
+	// --- Trigger ---
 	@Override
 	public LinkedList<IAction> getActions() {
 		LinkedList<IAction> actions = super.getActions();
@@ -1232,6 +1207,7 @@ outer:
 			}
 		}
 	}
+	*/
 	
 	/* --- CCCommands --- */
 	@CCCommand(description="Returns the Router UUID as an integer; all pipes have a unique ID")
@@ -1313,5 +1289,111 @@ outer:
 	final void destroy(){ // no overide, put code in OnBlockRemoval
 	
 	}
-	
+
+	public void setTile(LogisticsTileGenericPipe tile) {
+
+		this.container = tile;
+
+		transport.setTile(tile);
+	}
+
+	public void onBlockPlaced() {
+		transport.onBlockPlaced();
+	}
+
+	public void onBlockPlacedBy(EntityLivingBase placer) {
+	}
+
+	private boolean initialized = false;
+
+	public boolean needsInit() {
+		return !initialized;
+	}
+
+	public void initialize() {
+		transport.initialize();
+		initialized = true;
+	}
+
+	public boolean inputOpen(ForgeDirection from) {
+		return transport.inputOpen(from);
+	}
+
+	public boolean outputOpen(ForgeDirection to) {
+		return transport.outputOpen(to);
+	}
+
+	public void onEntityCollidedWithBlock(Entity entity) {
+	}
+
+	public boolean canConnectRedstone() {
+		if (hasGate())
+			return true;
+
+		return false;
+	}
+
+	public int isPoweringTo(int side) {
+		if (gate != null && gate.isEmittingRedstone()) {
+			ForgeDirection o = ForgeDirection.getOrientation(side).getOpposite();
+			TileEntity tile = container.getTile(o);
+
+			if (tile instanceof TileGenericPipe && container.isPipeConnected(o))
+				return 0;
+
+			return 15;
+		}
+		return 0;
+	}
+
+	public int isIndirectlyPoweringTo(int l) {
+		return isPoweringTo(l);
+	}
+
+	public void randomDisplayTick(Random random) {
+	}
+
+	protected void notifyBlocksOfNeighborChange(ForgeDirection side) {
+		container.worldObj.notifyBlocksOfNeighborChange(container.xCoord + side.offsetX, container.yCoord + side.offsetY, container.zCoord + side.offsetZ, BuildCraftTransport.genericPipeBlock.blockID);
+	}
+
+	protected void updateNeighbors(boolean needSelf) {
+		if (needSelf) {
+			container.worldObj.notifyBlocksOfNeighborChange(container.xCoord, container.yCoord, container.zCoord, BuildCraftTransport.genericPipeBlock.blockID);
+		}
+		for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+			notifyBlocksOfNeighborChange(side);
+		}
+	}
+
+	public LogisticsTileGenericPipe getContainer() {
+		return container;
+	}
+
+	public void onDropped(EntityItem item) {
+	}
+
+	/**
+	 * If this pipe is open on one side, return it.
+	 */
+	public ForgeDirection getOpenOrientation() {
+		int Connections_num = 0;
+
+		ForgeDirection target_orientation = ForgeDirection.UNKNOWN;
+
+		for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
+			if (container.isPipeConnected(o)) {
+
+				Connections_num++;
+
+				if (Connections_num == 1)
+					target_orientation = o;
+			}
+		}
+
+		if (Connections_num > 1 || Connections_num == 0)
+			return ForgeDirection.UNKNOWN;
+
+		return target_orientation.getOpposite();
+	}
 }

@@ -22,7 +22,6 @@ import logisticspipes.interfaces.routing.IDirectRoutingConnection;
 import logisticspipes.interfaces.routing.IFilter;
 import logisticspipes.pipes.PipeItemsFirewall;
 import logisticspipes.pipes.basic.CoreRoutedPipe;
-import logisticspipes.pipes.basic.fluid.LogisticsFluidConnectorPipe;
 import logisticspipes.proxy.SimpleServiceLocator;
 import logisticspipes.utils.OneList;
 import logisticspipes.utils.tuples.Pair;
@@ -51,26 +50,26 @@ public class PathFinder {
 	 * @return
 	 */
 		
-	public static HashMap<CoreRoutedPipe, ExitRoute> paintAndgetConnectedRoutingPipes(TileGenericPipe startPipe, ForgeDirection startOrientation, int maxVisited, int maxLength, IPaintPath pathPainter, EnumSet<PipeRoutingConnectionType> connectionType) {
+	public static HashMap<CoreRoutedPipe, ExitRoute> paintAndgetConnectedRoutingPipes(TileEntity startPipe, ForgeDirection startOrientation, int maxVisited, int maxLength, IPaintPath pathPainter, EnumSet<PipeRoutingConnectionType> connectionType) {
 		PathFinder newSearch = new PathFinder(maxVisited, maxLength, pathPainter);
 		newSearch.setVisited.add(startPipe);
 		Position p = new Position(startPipe.xCoord, startPipe.yCoord, startPipe.zCoord, startOrientation);
 		p.moveForwards(1);
-		TileEntity entity = startPipe.getWorld().getBlockTileEntity((int)p.x, (int)p.y, (int)p.z);
+		TileEntity entity = startPipe.getWorldObj().getBlockTileEntity((int)p.x, (int)p.y, (int)p.z);
 		if (!(entity instanceof TileGenericPipe && ((TileGenericPipe)entity).pipe.canPipeConnect(startPipe, startOrientation))){
 			return new HashMap<CoreRoutedPipe, ExitRoute>();
 		}
 		
-		return newSearch.getConnectedRoutingPipes((TileGenericPipe) entity, connectionType, startOrientation);
+		return newSearch.getConnectedRoutingPipes(entity, connectionType, startOrientation);
 	}
 	
 	public HashMap<CoreRoutedPipe, ExitRoute> result;
-	public PathFinder(TileGenericPipe startPipe, int maxVisited, int maxLength) {
+	public PathFinder(TileEntity startPipe, int maxVisited, int maxLength) {
 		this(maxVisited, maxLength, null);
 		result = this.getConnectedRoutingPipes(startPipe, EnumSet.allOf(PipeRoutingConnectionType.class), ForgeDirection.UNKNOWN);
 	}
 	
-	public PathFinder(TileGenericPipe startPipe, int maxVisited, int maxLength, ForgeDirection side) {
+	public PathFinder(TileEntity startPipe, int maxVisited, int maxLength, ForgeDirection side) {
 		this(maxVisited, maxLength, null);
 		result=this.getConnectedRoutingPipes(startPipe, EnumSet.allOf(PipeRoutingConnectionType.class), side);
 	}
@@ -79,18 +78,18 @@ public class PathFinder {
 	private PathFinder(int maxVisited, int maxLength, IPaintPath pathPainter) {
 		this.maxVisited = maxVisited;
 		this.maxLength = maxLength;
-		this.setVisited = new HashSet<TileGenericPipe>();
+		this.setVisited = new HashSet<TileEntity>();
 		this.pathPainter = pathPainter;
 	}
 	
 	private final int maxVisited;
 	private final int maxLength;
-	private final HashSet<TileGenericPipe> setVisited;
+	private final HashSet<TileEntity> setVisited;
 	private final IPaintPath pathPainter;
 	private int pipesVisited;
 	public List<Pair<ILogisticsPowerProvider,List<IFilter>>> powerNodes;
 	
-	private HashMap<CoreRoutedPipe, ExitRoute> getConnectedRoutingPipes(TileGenericPipe startPipe, EnumSet<PipeRoutingConnectionType> connectionFlags, ForgeDirection side) {
+	private HashMap<CoreRoutedPipe, ExitRoute> getConnectedRoutingPipes(TileEntity startPipe, EnumSet<PipeRoutingConnectionType> connectionFlags, ForgeDirection side) {
 		HashMap<CoreRoutedPipe, ExitRoute> foundPipes = new HashMap<CoreRoutedPipe, ExitRoute>();
 		
 		boolean root = setVisited.size() == 0;
@@ -120,12 +119,7 @@ public class PathFinder {
 			foundPipes.put(rp, new ExitRoute(null,rp.getRouter(), ForgeDirection.UNKNOWN, side.getOpposite(),  setVisited.size(), connectionFlags));
 			
 			return foundPipes;
-		}
-		
-		//Iron, obsidean and liquid pipes will separate networks
-		if (startPipe.pipe instanceof LogisticsFluidConnectorPipe) {
-			return foundPipes;
-		}		
+		}	
 		
 		//Visited is checked after, so we can reach the same target twice to allow to keep the shortest path
 		setVisited.add(startPipe);

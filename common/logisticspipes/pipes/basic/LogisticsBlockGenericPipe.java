@@ -133,7 +133,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 		}
 
 		float facadeThickness = PipeConstants.FACADE_THICKNESS;
-
+/*
 		if (tileG.hasFacade(ForgeDirection.EAST)) {
 			setBlockBounds(1 - facadeThickness, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
@@ -163,6 +163,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, facadeThickness);
 			super.addCollisionBoxesToList(world, i, j, k, axisalignedbb, arraylist, par7Entity);
 		}
+		*/
 		setBlockBounds(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F);
 	}
 	
@@ -175,7 +176,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			return AxisAlignedBB.getBoundingBox((double) i + 0, (double) j + 0, (double) k + 0, (double) i + 1, (double) j + 1, (double) k + 1);
 		}
 		float xMin = PipeConstants.PIPE_MIN_POS, xMax = PipeConstants.PIPE_MAX_POS, yMin = PipeConstants.PIPE_MIN_POS, yMax = PipeConstants.PIPE_MAX_POS, zMin = PipeConstants.PIPE_MIN_POS, zMax = PipeConstants.PIPE_MAX_POS;
-
+/*
 		if (tileG.isPipeConnected(ForgeDirection.WEST) || tileG.hasFacade(ForgeDirection.WEST)) {
 			xMin = 0.0F;
 		}
@@ -220,6 +221,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			yMin = 0.0F;
 			yMax = 1.0F;
 		}
+		*/
 		return AxisAlignedBB.getBoundingBox((double) i + xMin, (double) j + yMin, (double) k + zMin, (double) i + xMax, (double) j + yMax, (double) k + zMax);
 	}
 	
@@ -849,31 +851,6 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 		return false;
 	}
 
-	/**
-	 * Drops a pipe wire item of the passed color.
-	 *
-	 * @param color
-	 */
-	private void dropWire(IPipe.WireColor color, CoreRoutedPipe pipe) {
-
-		Item wireItem;
-		switch (color) {
-			case Red:
-				wireItem = BuildCraftTransport.redPipeWire;
-				break;
-			case Blue:
-				wireItem = BuildCraftTransport.bluePipeWire;
-				break;
-			case Green:
-				wireItem = BuildCraftTransport.greenPipeWire;
-				break;
-			default:
-				wireItem = BuildCraftTransport.yellowPipeWire;
-		}
-		pipe.dropItem(new ItemStack(wireItem));
-
-	}
-
 	@Override
 	public void onEntityCollidedWithBlock(World world, int i, int j, int k, Entity entity) {
 		super.onEntityCollidedWithBlock(world, i, j, k, entity);
@@ -977,7 +954,7 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 		if (placed) {
 
 			LogisticsTileGenericPipe tile = (LogisticsTileGenericPipe) world.getBlockTileEntity(i, j, k);
-			tile.initialize(pipe);
+			if(pipe != null) tile.initialize(pipe);
 		}
 
 		return placed;
@@ -1009,12 +986,14 @@ public class LogisticsBlockGenericPipe extends BlockContainer {
 			return;
 		}
 		*/
+		/*
 		for (int i : pipes.keySet()) {
 			CoreRoutedPipe dummyPipe = createPipe(i);
 			if (dummyPipe != null) {
-				dummyPipe.getIconProvider().registerIcons(iconRegister);
+				dummyPipe.getLPIconProvider().registerIcons(iconRegister);
 			}
 		}
+		*/
 	}
 
 	@Override

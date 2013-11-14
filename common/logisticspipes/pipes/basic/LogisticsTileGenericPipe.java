@@ -1,8 +1,5 @@
 package logisticspipes.pipes.basic;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -11,11 +8,6 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.logging.Level;
-
-import buildcraft.api.power.IPowerReceptor;
-import buildcraft.api.power.PowerHandler;
-import buildcraft.api.transport.IPipe;
-import buildcraft.api.transport.IPipeTile;
 
 import logisticspipes.LogisticsPipes;
 import logisticspipes.asm.ModDependentField;
@@ -50,6 +42,22 @@ import net.minecraftforge.fluids.Fluid;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTankInfo;
 import net.minecraftforge.fluids.IFluidHandler;
+import buildcraft.BuildCraftCore;
+import buildcraft.BuildCraftTransport;
+import buildcraft.api.gates.ITrigger;
+import buildcraft.api.power.IPowerReceptor;
+import buildcraft.api.power.PowerHandler;
+import buildcraft.api.power.PowerHandler.PowerReceiver;
+import buildcraft.api.transport.IPipe;
+import buildcraft.api.transport.IPipeTile;
+import buildcraft.core.DefaultProps;
+import buildcraft.core.TileBuffer;
+import buildcraft.core.inventory.InvUtils;
+import buildcraft.core.network.IClientState;
+import buildcraft.core.network.PacketTileState;
+import buildcraft.core.utils.BCLog;
+import buildcraft.transport.PipeTransportItems;
+import buildcraft.transport.TravelingItem;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import dan200.computer.api.IComputerAccess;
@@ -176,16 +184,16 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		if (with == null)
 			return false;
 
-		if (hasPlug(side))
-			return false;
+		//if (hasPlug(side))
+		//	return false;
 
 		if (!LogisticsBlockGenericPipe.isValid(pipe))
 			return false;
 
 		//TODO Proxy Implementation
 		if (with instanceof LogisticsTileGenericPipe) {
-			if (((LogisticsTileGenericPipe) with).hasPlug(side.getOpposite()))
-				return false;
+			//if (((LogisticsTileGenericPipe) with).hasPlug(side.getOpposite()))
+			//	return false;
 			CoreRoutedPipe otherPipe = ((LogisticsTileGenericPipe) with).pipe;
 
 			if (!LogisticsBlockGenericPipe.isValid(otherPipe))
@@ -502,7 +510,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	public void updateEntity() {
 		if(MainProxy.isServer(getWorldObj())) {
 			if(getWorldObj().getBlockId(xCoord, yCoord, zCoord) != LogisticsPipes.LogisticsBlockGenericPipe.blockID) {
-				WorldTickHandler.serverPipesToReplace.add(this);
+				WorldTickHandler.serverTilesToReplace.add(this);
 				return;
 			}
 		}
@@ -560,9 +568,10 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		if (pipe != null) {
 			nbt.setInteger("pipeId", pipe.itemID);
 			pipe.writeToNBT(nbt);
-		} else
-			nbt.setInteger("pipeId", coreState.pipeId);
-
+		} else {
+			//nbt.setInteger("pipeId", coreState.pipeId);
+		}
+		
 		for (int i = 0; i < ForgeDirection.VALID_DIRECTIONS.length; i++) {
 			nbt.setInteger("facadeBlocks[" + i + "]", facadeBlocks[i]);
 			nbt.setInteger("facadeMeta[" + i + "]", facadeMeta[i]);
@@ -577,8 +586,8 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	public void readFromNBT(NBTTagCompound nbt) {
 		super.readFromNBT(nbt);
 
-		coreState.pipeId = nbt.getInteger("pipeId");
-		pipe = LogisticsBlockGenericPipe.createPipe(coreState.pipeId);
+		int pipeId = nbt.getInteger("pipeId");
+		pipe = LogisticsBlockGenericPipe.createPipe(pipeId);
 
 		if (pipe != null)
 			pipe.readFromNBT(nbt);
@@ -595,8 +604,6 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		for(int i=0;i<turtleConnect.length;i++) {
 			turtleConnect[i] = nbt.getBoolean("turtleConnect_" + i);
 		}
-		int pipeId = nbt.getInteger("pipeId");
-		pipe = LogisticsBlockGenericPipe.createPipe(pipeId);
 	}
 
 	@Override
@@ -659,6 +666,8 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	@SideOnly(Side.CLIENT)
 	public Icon	currentTexture;
 
+	private boolean	pipeBound;
+
 	public void initialize(CoreRoutedPipe pipe) {
 
 		this.blockType = getBlockType();
@@ -672,7 +681,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		this.pipe = pipe;
 
 		for (ForgeDirection o : ForgeDirection.VALID_DIRECTIONS) {
-			TileEntity tile = getTile(o);
+			//TileEntity tile = getTile(o);
 
 			//TODO Implement Proxys
 			/*if (tile instanceof ITileBufferHolder)
@@ -695,10 +704,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	private void bindPipe() {
 		if (!pipeBound && pipe != null) {
-
 			pipe.setTile(this);
-
-			coreState.pipeId = pipe.itemID;
 			pipeBound = true;
 		}
 	}
@@ -738,8 +744,8 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 				Orientation itemPos = new Orientation(xCoord + 0.5, yCoord + 0.5, zCoord + 0.5, from.getOpposite());
 				itemPos.moveBackwards(0.4);
 
-				TravelingItem pipedItem = new TravelingItem(itemPos.x, itemPos.y, itemPos.z, payload);
-				((PipeTransportItems) pipe.transport).injectItem(pipedItem, itemPos.orientation);
+				TravelingItem pipedItem = new TravelingItem(itemPos.getX(), itemPos.getY(), itemPos.getZ(), payload);
+				((PipeTransportItems) pipe.transport).injectItem(pipedItem, itemPos.getDir());
 			}
 			return payload.stackSize;
 		}
@@ -758,74 +764,17 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	public Packet getDescriptionPacket() {
 		//TODO generate General Information
 		// Get rid of client side triggered Update requests
-		bindPipe();
-
-		PacketTileState packet = new PacketTileState(this.xCoord, this.yCoord, this.zCoord);
-		if (pipe != null && pipe.gate != null)
-			coreState.gateKind = pipe.gate.kind.ordinal();
-		else
-			coreState.gateKind = 0;
-
-		if (pipe != null && pipe.transport != null)
-			pipe.transport.sendDescriptionPacket();
-
-		packet.addStateForSerialization((byte) 0, coreState);
-		packet.addStateForSerialization((byte) 1, renderState);
-		if (pipe instanceof IClientState)
-			packet.addStateForSerialization((byte) 2, (IClientState) pipe);
-		return packet.getPacket();
+		//return packet.getPacket();
+		return null;
 	}
 
 	public void sendUpdateToClient() {
 		sendClientUpdate = true;
 	}
 
-	@Override
-	public LinkedList<ITrigger> getTriggers() {
-		//TODO Implement own Gate trigger version
-		LinkedList<ITrigger> result = new LinkedList<ITrigger>();
-
-		if (LogisticsBlockGenericPipe.isFullyDefined(pipe) && pipe.hasGate()) {
-			result.add(BuildCraftCore.triggerRedstoneActive);
-			result.add(BuildCraftCore.triggerRedstoneInactive);
-		}
-
-		return result;
-	}
-
-	public TileBuffer[] getTileCache() {
-		if (tileBuffer == null && pipe != null)
-			tileBuffer = TileBuffer.makeBuffer(worldObj, xCoord, yCoord, zCoord, pipe.transport.delveIntoUnloadedChunks());
-		return tileBuffer;
-	}
-
-	@Override
-	public void blockCreated(ForgeDirection from, int blockID, TileEntity tile) {
-		TileBuffer[] cache = getTileCache();
-		if (cache != null)
-			cache[from.getOpposite().ordinal()].set(blockID, tile);
-	}
-
-	@Override
-	public int getBlockId(ForgeDirection to) {
-		TileBuffer[] cache = getTileCache();
-		if (cache != null)
-			return cache[to.ordinal()].getBlockID();
-		else
-			return 0;
-	}
-
-	@Override
-	public TileEntity getTile(ForgeDirection to) {
-		TileBuffer[] cache = getTileCache();
-		if (cache != null)
-			return cache[to.ordinal()].getTile();
-		else
-			return null;
-	}
-
 	private void computeConnections() {
-		TileBuffer[] cache = getTileCache();
+		//TODO
+		/*TileBuffer[] cache = getTileCache();
 		if (cache == null)
 			return;
 
@@ -835,12 +784,15 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 			pipeConnectionsBuffer[side.ordinal()] = canPipeConnect(t.getTile(), side);
 		}
+		*/
 	}
 
 	@Override
 	public boolean isPipeConnected(ForgeDirection with) {
+		/*
 		if (worldObj.isRemote)
 			return renderState.pipeConnectionMatrix.isConnected(with);
+		*/
 		return pipeConnectionsBuffer[with.ordinal()];
 	}
 
@@ -855,7 +807,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	 */
 	@Override
 	public int fill(ForgeDirection from, FluidStack resource, boolean doFill) {
-		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler && !hasPlug(from))
+		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler)
 			return ((IFluidHandler) pipe.transport).fill(from, resource, doFill);
 		else
 			return 0;
@@ -863,7 +815,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	@Override
 	public FluidStack drain(ForgeDirection from, int maxDrain, boolean doDrain) {
-		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler && !hasPlug(from))
+		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler)
 			return ((IFluidHandler) pipe.transport).drain(from, maxDrain, doDrain);
 		else
 			return null;
@@ -871,7 +823,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	@Override
 	public FluidStack drain(ForgeDirection from, FluidStack resource, boolean doDrain) {
-		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler && !hasPlug(from))
+		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler)
 			return ((IFluidHandler) pipe.transport).drain(from, resource, doDrain);
 		else
 			return null;
@@ -879,7 +831,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	@Override
 	public boolean canFill(ForgeDirection from, Fluid fluid) {
-		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler && !hasPlug(from))
+		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler)
 			return ((IFluidHandler) pipe.transport).canFill(from, fluid);
 		else
 			return false;
@@ -887,7 +839,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	@Override
 	public boolean canDrain(ForgeDirection from, Fluid fluid) {
-		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler && !hasPlug(from))
+		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe.transport instanceof IFluidHandler)
 			return ((IFluidHandler) pipe.transport).canDrain(from, fluid);
 		else
 			return false;
@@ -901,7 +853,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 	public void scheduleRenderUpdate() {
 		refreshRenderState = true;
 	}
-
+/*
 	public boolean addFacade(ForgeDirection direction, int blockid, int meta) {
 		if (this.worldObj.isRemote)
 			return false;
@@ -942,6 +894,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		}
 		return true;
 	}
+	*/
 
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -956,15 +909,18 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 
 	@Override
 	public boolean isSolidOnSide(ForgeDirection side) {
+		/*
 		if (hasFacade(side))
 			return true;
 
 		if (LogisticsBlockGenericPipe.isValid(pipe) && pipe instanceof ISolidSideTile)
 			if (((ISolidSideTile) pipe).isSolidOnSide(side))
 				return true;
+				*/
 		return false;
 	}
 
+	/*
 	public boolean hasPlug(ForgeDirection side) {
 		if (side == null || side == ForgeDirection.UNKNOWN)
 			return false;
@@ -972,7 +928,8 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 			return renderState.plugMatrix.isConnected(side);
 		return plugs[side.ordinal()];
 	}
-
+	*/
+/*
 	public boolean removeAndDropPlug(ForgeDirection side) {
 		if (!hasPlug(side))
 			return false;
@@ -996,7 +953,7 @@ public class LogisticsTileGenericPipe extends TileEntity implements IPeripheral,
 		scheduleRenderUpdate();
 		return true;
 	}
-
+*/
 	public int getBlockId() {
 		Block block = getBlockType();
 		if (block != null)

@@ -44,7 +44,7 @@ public class ConverterPipe extends Pipe<PipeTransportLogistics> {
 			new UnsupportedOperationException("These have to be the same").printStackTrace();
 		}
 		if(MainProxy.isServer(getWorld())) {
-			WorldTickHandler.serverPipesToReplace.add(this.container);
+			WorldTickHandler.serverTilesToReplace.add(this.container);
 		}
 	}
 

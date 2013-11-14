@@ -114,6 +114,7 @@ public class ItemLogisticsPipe extends LogisticsItem {
 	@SideOnly(Side.CLIENT)
 	public void addInformation(ItemStack stack, EntityPlayer player, List list, boolean advanced) {
 		if(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
+			/*
 			String baseKey = MessageFormat.format("{0}.tip", getUnlocalizedName());
 			String key = baseKey + 1;
 			String translation = Localization.get(key);
@@ -123,6 +124,7 @@ public class ItemLogisticsPipe extends LogisticsItem {
 				key = baseKey + ++i;
 				translation = Localization.get(key);
 			}
+			*/
 		}
 	}
 }

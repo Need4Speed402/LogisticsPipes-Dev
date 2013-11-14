@@ -20,6 +20,7 @@ import logisticspipes.routing.LaserData;
 import logisticspipes.routing.PathFinder;
 import logisticspipes.routing.PipeRoutingConnectionType;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeDirection;
 import buildcraft.api.core.Position;
@@ -67,13 +68,13 @@ public class RequestRoutingLasersPacket extends CoordinatesPacket {
 		}
 	}
 
-	private void handleRouteInDirection(final TileGenericPipe pipe, ForgeDirection dir, ArrayList<IRouter> connectedRouters, final List<LaserData> lasers, EnumSet<PipeRoutingConnectionType> connectionType) {
+	private void handleRouteInDirection(final TileEntity pipe, ForgeDirection dir, ArrayList<IRouter> connectedRouters, final List<LaserData> lasers, EnumSet<PipeRoutingConnectionType> connectionType) {
 		lasers.add(new LaserData(pipe.xCoord, pipe.yCoord, pipe.zCoord, dir, connectionType).setStartPipe(firstPipe));
 		firstPipe = false;
 		HashMap<CoreRoutedPipe, ExitRoute> map = PathFinder.paintAndgetConnectedRoutingPipes(pipe, dir, Configs.LOGISTICS_DETECTION_COUNT, Configs.LOGISTICS_DETECTION_LENGTH, new IPaintPath() {
 			@Override
 			public void addLaser(World worldObj, LaserData laser) {
-				if(pipe.getWorld() == worldObj) {
+				if(pipe.getWorldObj() == worldObj) {
 					lasers.add(laser);
 				}
 			}
