@@ -172,7 +172,7 @@ public abstract class CoreRoutedPipe implements IRequestItems, IAdjacentWorldAcc
 		if (!networkWrappers.containsKey(this.getClass())) {
 			networkWrappers.put(this.getClass(), new TilePacketWrapper(new Class[]{TileGenericPipe.class, this.transport.getClass()}));
 		}
-		((PipeTransportItems) transport).allowBouncing = true;
+		((PipeTransportLogistics) transport).allowBouncing = true;
 		
 		pipecount++;
 		
